@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RandomChat Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --accent3: #43e97b;
+    --accent4: #f7971e;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --danger: #ff4757;
+    --success: #2ed573;
+    --warning: #ffa502;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Space Grotesk', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+  /* LOGIN */
+  #loginScreen {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at 20% 50%, rgba(108,99,255,0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(255,101,132,0.1) 0%, transparent 60%),
+                var(--bg);
+  }
+  .login-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 48px; width: 380px;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+  }
+  .login-logo { text-align: center; margin-bottom: 32px; }
+  .login-logo .icon { font-size: 48px; margin-bottom: 12px; }
+  .login-logo h1 { font-size: 24px; font-weight: 700; }
+  .login-logo span { color: var(--accent); }
+  .login-logo p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 8px; font-weight: 500; }
+  .form-group input {
+    width: 100%; padding: 12px 16px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text); font-family: inherit; font-size: 14px;
+    outline: none; transition: border-color 0.2s;
+  }
+  .form-group input:focus { border-color: var(--accent); }
+  .btn-login {
+    width: 100%; padding: 14px; background: var(--accent);
+    border: none; border-radius: 10px; color: white;
+    font-family: inherit; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+    margin-top: 8px;
+  }
+  .btn-login:hover { opacity: 0.9; }
+  .btn-login:active { transform: scale(0.99); }
+  .login-error { color: var(--danger); font-size: 13px; text-align: center; margin-top: 12px; display: none; }
+
+  /* MAIN LAYOUT */
+  #app { display: none; flex-direction: row; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 240px; background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0; position: fixed;
+    top: 0; left: 0; height: 100vh; z-index: 100;
+  }
+  .sidebar-logo { padding: 0 20px 24px; border-bottom: 1px solid var(--border); }
+  .sidebar-logo h2 { font-size: 18px; font-weight: 700; }
+  .sidebar-logo h2 span { color: var(--accent); }
+  .sidebar-logo p { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+  .nav { flex: 1; padding: 16px 12px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 10px; cursor: pointer;
+    font-size: 14px; font-weight: 500; color: var(--muted);
+    transition: all 0.15s; margin-bottom: 4px;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(108,99,255,0.15); color: var(--accent); }
+  .nav-item .icon { font-size: 18px; width: 20px; text-align: center; }
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
+  .btn-logout {
+    width: 100%; padding: 10px; background: transparent;
+    border: 1px solid var(--border); border-radius: 8px;
+    color: var(--muted); font-family: inherit; font-size: 13px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* CONTENT */
+  .content { margin-left: 240px; flex: 1; padding: 32px; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .page-header { margin-bottom: 28px; }
+  .page-header h1 { font-size: 26px; font-weight: 700; }
+  .page-header p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+  /* STAT CARDS */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 20px; position: relative; overflow: hidden;
+  }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; right: 0;
+    width: 80px; height: 80px; border-radius: 0 16px 0 80px;
+    opacity: 0.1;
+  }
+  .stat-card:nth-child(1)::before { background: var(--accent); }
+  .stat-card:nth-child(2)::before { background: var(--accent3); }
+  .stat-card:nth-child(3)::before { background: var(--accent2); }
+  .stat-card:nth-child(4)::before { background: var(--accent4); }
+  .stat-label { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-value { font-size: 32px; font-weight: 700; margin: 8px 0 4px; font-family: 'JetBrains Mono', monospace; }
+  .stat-sub { font-size: 12px; color: var(--muted); }
+  .stat-card:nth-child(1) .stat-value { color: var(--accent); }
+  .stat-card:nth-child(2) .stat-value { color: var(--accent3); }
+  .stat-card:nth-child(3) .stat-value { color: var(--accent2); }
+  .stat-card:nth-child(4) .stat-value { color: var(--accent4); }
+
+  /* TABLES */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .card-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-header h3 { font-size: 16px; font-weight: 600; }
+  .search-bar {
+    padding: 8px 14px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-family: inherit; font-size: 13px;
+    outline: none; width: 220px;
+  }
+  .search-bar:focus { border-color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; }
+  th { padding: 12px 20px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); border-bottom: 1px solid var(--border); }
+  td { padding: 14px 20px; font-size: 14px; border-bottom: 1px solid rgba(42,42,58,0.5); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .badge-online { background: rgba(46,213,115,0.15); color: var(--success); }
+  .badge-offline { background: rgba(107,107,128,0.15); color: var(--muted); }
+  .badge-banned { background: rgba(255,71,87,0.15); color: var(--danger); }
+  .badge-pending { background: rgba(255,165,2,0.15); color: var(--warning); }
+  .badge-resolved { background: rgba(46,213,115,0.15); color: var(--success); }
+  .badge-reviewed { background: rgba(108,99,255,0.15); color: var(--accent); }
+  .action-btn {
+    padding: 5px 12px; border-radius: 6px; border: none;
+    font-family: inherit; font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: opacity 0.2s; margin-right: 4px;
+  }
+  .btn-ban { background: rgba(255,71,87,0.15); color: var(--danger); }
+  .btn-unban { background: rgba(46,213,115,0.15); color: var(--success); }
+  .btn-delete { background: rgba(107,107,128,0.15); color: var(--muted); }
+  .btn-resolve { background: rgba(108,99,255,0.15); color: var(--accent); }
+  .action-btn:hover { opacity: 0.7; }
+
+  /* PAGINATION */
+  .pagination { display: flex; align-items: center; gap: 8px; padding: 16px 20px; justify-content: center; }
+  .page-btn {
+    padding: 6px 14px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); font-family: inherit; font-size: 13px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .page-btn:hover, .page-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* ONLINE INDICATOR */
+  .online-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--success); margin-right: 6px; box-shadow: 0 0 6px var(--success); }
+
+  /* LOADING */
+  .loading { text-align: center; padding: 40px; color: var(--muted); }
+  .spinner { display: inline-block; width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center; z-index: 1000;
+    display: none;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px; width: 420px;
+  }
+  .modal h3 { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+  .modal textarea {
+    width: 100%; padding: 12px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-family: inherit; font-size: 14px;
+    resize: none; outline: none; height: 80px;
+  }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+  .btn-confirm { padding: 10px 20px; background: var(--danger); border: none; border-radius: 8px; color: white; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn-cancel { padding: 10px 20px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; cursor: pointer; }
+
+  /* LIVE INDICATOR */
+  .live-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(46,213,115,0.1); border: 1px solid rgba(46,213,115,0.3);
+    border-radius: 20px; padding: 4px 12px; font-size: 12px; color: var(--success);
+    font-weight: 600;
+  }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .mini-stat { background: var(--surface2); border-radius: 12px; padding: 16px; }
+  .mini-stat-label { font-size: 12px; color: var(--muted); }
+  .mini-stat-val { font-size: 22px; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="icon">💬</div>
+      <h1>Random<span>Chat</span></h1>
+      <p>Admin Control Panel</p>
+    </div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="loginUser" placeholder="admin" value="admin"/>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="btn-login" onclick="doLogin()">Sign In →</button>
+    <div class="login-error" id="loginError">Invalid credentials. Please try again.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <h2>Random<span>Chat</span></h2>
+      <p>// admin panel v1.0</p>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="showPage('dashboard')">
+        <span class="icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showPage('users')">
+        <span class="icon">👥</span> Users
+      </div>
+      <div class="nav-item" onclick="showPage('reports')">
+        <span class="icon">🚨</span> Reports
+      </div>
+      <div class="nav-item" onclick="showPage('le')">
+        <span class="icon">⚖️</span> Law Enforcement
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Logged in as <strong id="adminName" style="color:var(--text)"></strong></div>
+      <button class="btn-logout" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <h1>Dashboard</h1>
+          <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+        </div>
+        <p>Real-time overview of your platform</p>
+      </div>
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value" id="s-total">—</div><div class="stat-sub">anonymous users</div></div>
+        <div class="stat-card"><div class="stat-label">Online Now</div><div class="stat-value" id="s-online">—</div><div class="stat-sub">active users</div></div>
+        <div class="stat-card"><div class="stat-label">Total Messages</div><div class="stat-value" id="s-msgs">—</div><div class="stat-sub">all time</div></div>
+        <div class="stat-card"><div class="stat-label">Pending Reports</div><div class="stat-value" id="s-reports">—</div><div class="stat-sub">need review</div></div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><h3>Today's Activity</h3></div>
+          <div style="padding:20px;">
+            <div class="mini-stat" style="margin-bottom:12px;">
+              <div class="mini-stat-label">New Users Today</div>
+              <div class="mini-stat-val" id="s-newusers" style="color:var(--accent)">—</div>
+            </div>
+            <div class="mini-stat" style="margin-bottom:12px;">
+              <div class="mini-stat-label">Messages Today</div>
+              <div class="mini-stat-val" id="s-msgtoday" style="color:var(--accent3)">—</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-label">Total Chat Sessions</div>
+              <div class="mini-stat-val" id="s-sessions" style="color:var(--accent2)">—</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Quick Actions</h3></div>
+          <div style="padding:20px;display:flex;flex-direction:column;gap:10px;">
+            <button class="action-btn" style="padding:12px;background:rgba(108,99,255,0.15);color:var(--accent);border-radius:10px;font-size:14px;" onclick="showPage('users')">👥 Manage Users</button>
+            <button class="action-btn" style="padding:12px;background:rgba(255,71,87,0.15);color:var(--danger);border-radius:10px;font-size:14px;" onclick="showPage('reports')">🚨 Review Reports</button>
+            <button class="action-btn" style="padding:12px;background:rgba(46,213,115,0.15);color:var(--success);border-radius:10px;font-size:14px;" onclick="loadStats()">🔄 Refresh Stats</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="page" id="page-users">
+      <div class="page-header">
+        <h1>Users</h1>
+        <p>Manage all users</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>All Users <span id="userCount" style="color:var(--muted);font-size:13px;"></span></h3>
+          <div style="display:flex;gap:8px;">
+            <select id="banFilter" onchange="loadUsers(1)" style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none;">
+              <option value="">All Users</option>
+              <option value="false">Active</option>
+              <option value="true">Banned</option>
+            </select>
+            <input class="search-bar" id="userSearch" placeholder="Search username or email..." oninput="debounce(loadUsers, 400)(1)"/>
+          </div>
+        </div>
+        <div id="usersTable"><div class="loading"><div class="spinner"></div><br/>Loading users...</div></div>
+        <div class="pagination" id="usersPagination"></div>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="page" id="page-reports">
+      <div class="page-header">
+        <h1>Reports</h1>
+        <p>Review user reports and take action</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Reports <span id="reportCount" style="color:var(--muted);font-size:13px;"></span></h3>
+          <select id="reportFilter" onchange="loadReports(1)" style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none;">
+            <option value="">All</option>
+            <option value="pending">Pending</option>
+            <option value="reviewed">Reviewed</option>
+            <option value="resolved">Resolved</option>
+          </select>
+        </div>
+        <div id="reportsTable"><div class="loading"><div class="spinner"></div><br/>Loading reports...</div></div>
+        <div class="pagination" id="reportsPagination"></div>
+      </div>
+    </div>
+
+    <!-- LAW ENFORCEMENT -->
+    <div class="page" id="page-le">
+      <div class="page-header">
+        <h1>⚖️ Law Enforcement</h1>
+        <p>Manage legal data requests — IT Act 2000, CrPC Section 91, DPDP Act 2023</p>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header"><h3>📋 Compliance Summary</h3></div>
+        <div style="padding:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          <div class="mini-stat"><div class="mini-stat-label">Data Retention</div><div class="mini-stat-val" style="color:var(--accent);font-size:16px;">90 Days (IT Act)</div></div>
+          <div class="mini-stat"><div class="mini-stat-label">IP Storage</div><div class="mini-stat-val" style="color:var(--accent3);font-size:16px;">AES-256 Encrypted</div></div>
+          <div class="mini-stat"><div class="mini-stat-label">Message Storage</div><div class="mini-stat-val" style="color:var(--accent2);font-size:16px;">Flagged Sessions Only</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>LE Requests <span id="leCount" style="color:var(--muted);font-size:13px;"></span></h3>
+          <div style="display:flex;gap:8px;">
+            <select id="leFilter" onchange="loadLE(1)" style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none;">
+              <option value="">All</option>
+              <option value="received">Received</option>
+              <option value="under_review">Under Review</option>
+              <option value="approved">Approved</option>
+              <option value="exported">Exported</option>
+              <option value="rejected">Rejected</option>
+            </select>
+            <button class="action-btn btn-resolve" style="padding:8px 16px;font-size:13px;" onclick="openLEModal()">+ New Request</button>
+          </div>
+        </div>
+        <div id="leTable"><div class="loading"><div class="spinner"></div><br/>Loading...</div></div>
+        <div class="pagination" id="lePagination"></div>
+      </div>
+    </div>
+
+  </div><!-- end content -->
+</div><!-- end app -->
+<div class="modal-overlay" id="banModal">
+  <div class="modal">
+    <h3>🚫 Ban User</h3>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:16px;">Enter a reason for banning this user. They will see this message.</p>
+    <textarea id="banReason" placeholder="e.g. Sending inappropriate content, spamming users..."></textarea>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmBan()">Ban User</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = '';
+  let adminToken = '';
+  let creds = { username: '', password: '' };
+  let currentBanUserId = null;
+  let usersPage = 1, reportsPage = 1, lePage = 1;
+
+  // ── AUTH ──────────────────────────────────────────────────────────────
+  async function doLogin() {
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value.trim();
+    if (!u || !p) return;
+
+    try {
+      const res = await fetch(`${API}/api/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password: p })
+      });
+      const data = await res.json();
+      if (data.success) {
+        adminToken = data.data.token;
+        creds = { username: u, password: p };
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        document.getElementById('adminName').textContent = u;
+        document.getElementById('loginError').style.display = 'none';
+        loadStats();
+        setInterval(loadStats, 30000);
+      } else {
+        document.getElementById('loginError').textContent = data.message || 'Invalid credentials';
+        document.getElementById('loginError').style.display = 'block';
+      }
+    } catch (e) {
+      document.getElementById('loginError').textContent = 'Cannot connect to server. Is it running?';
+      document.getElementById('loginError').style.display = 'block';
+    }
+  }
+
+  function doLogout() {
+    adminToken = '';
+    creds = { username: '', password: '' };
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+
+  function authHeaders() {
+    return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` };
+  }
+
+  // ── NAVIGATION ────────────────────────────────────────────────────────
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    event.currentTarget.classList.add('active');
+    if (name === 'users') loadUsers(1);
+    if (name === 'reports') loadReports(1);
+    if (name === 'le') loadLE(1);
+  }
+
+  // ── STATS ─────────────────────────────────────────────────────────────
+  async function loadStats() {
+    try {
+      const res = await fetch(`${API}/api/admin/stats`, { headers: authHeaders() });
+      const data = await res.json();
+      if (!data.success) return;
+      const s = data.stats;
+      document.getElementById('s-total').textContent = s.totalUsers.toLocaleString();
+      document.getElementById('s-online').textContent = s.onlineUsers.toLocaleString();
+      document.getElementById('s-msgs').textContent = s.totalMessages.toLocaleString();
+      document.getElementById('s-reports').textContent = s.pendingReports.toLocaleString();
+      document.getElementById('s-newusers').textContent = s.newUsersToday.toLocaleString();
+      document.getElementById('s-msgtoday').textContent = s.messagesToday.toLocaleString();
+      document.getElementById('s-sessions').textContent = s.totalSessions.toLocaleString();
+    } catch (e) { console.error('Stats error', e); }
+  }
+
+  // ── USERS ─────────────────────────────────────────────────────────────
+  async function loadUsers(page = 1) {
+    usersPage = page;
+    const search = document.getElementById('userSearch').value;
+    const banned = document.getElementById('banFilter').value;
+    const params = new URLSearchParams({ page, limit: 15, search, banned });
+    document.getElementById('usersTable').innerHTML = '<div class="loading"><div class="spinner"></div><br/>Loading...</div>';
+
+    try {
+      const res = await fetch(`${API}/api/admin/users?${params}`, { headers: authHeaders() });
+      const data = await res.json();
+      if (!data.success) return;
+
+      document.getElementById('userCount').textContent = `(${data.total} total)`;
+      if (data.users.length === 0) {
+        document.getElementById('usersTable').innerHTML = '<div class="loading">No users found</div>';
+        return;
+      }
+
+      const rows = data.users.map(u => `
+        <tr>
+          <td><strong>${u.username}</strong></td>
+          <td style="color:var(--muted);font-size:13px;">${u.email}</td>
+          <td><span class="badge ${u.isOnline ? 'badge-online' : 'badge-offline'}">${u.isOnline ? '● Online' : 'Offline'}</span></td>
+          <td>${u.isBanned ? '<span class="badge badge-banned">Banned</span>' : '<span class="badge badge-online">Active</span>'}</td>
+          <td style="font-family:'JetBrains Mono',monospace;font-size:12px;">${u.totalChats || 0} chats</td>
+          <td style="font-size:12px;color:var(--muted);">${new Date(u.createdAt).toLocaleDateString()}</td>
+          <td>
+            ${u.isBanned
+              ? `<button class="action-btn btn-unban" onclick="unbanUser('${u._id}')">Unban</button>`
+              : `<button class="action-btn btn-ban" onclick="openBanModal('${u._id}')">Ban</button>`}
+            <button class="action-btn btn-delete" onclick="deleteUser('${u._id}', '${u.username}')">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+
+      document.getElementById('usersTable').innerHTML = `
+        <table>
+          <thead><tr><th>Username</th><th>Email</th><th>Status</th><th>Account</th><th>Activity</th><th>Joined</th><th>Actions</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+
+      renderPagination('usersPagination', page, data.pages, loadUsers);
+    } catch (e) { document.getElementById('usersTable').innerHTML = '<div class="loading">Error loading users</div>'; }
+  }
+
+  function openBanModal(userId) {
+    currentBanUserId = userId;
+    document.getElementById('banReason').value = '';
+    document.getElementById('banModal').classList.add('open');
+  }
+  function closeModal() { document.getElementById('banModal').classList.remove('open'); currentBanUserId = null; }
+
+  async function confirmBan() {
+    const reason = document.getElementById('banReason').value.trim() || 'Violated terms of service';
+    try {
+      await fetch(`${API}/api/admin/users/${currentBanUserId}/ban`, {
+        method: 'POST', headers: authHeaders(), body: JSON.stringify({ reason })
+      });
+      closeModal(); loadUsers(usersPage); loadStats();
+    } catch (e) { alert('Error banning user'); }
+  }
+
+  async function unbanUser(userId) {
+    if (!confirm('Unban this user?')) return;
+    try {
+      await fetch(`${API}/api/admin/users/${userId}/unban`, { method: 'POST', headers: authHeaders() });
+      loadUsers(usersPage); loadStats();
+    } catch (e) { alert('Error unbanning user'); }
+  }
+
+  async function deleteUser(userId, username) {
+    if (!confirm(`Permanently delete user "${username}"? This cannot be undone.`)) return;
+    try {
+      await fetch(`${API}/api/admin/users/${userId}`, { method: 'DELETE', headers: authHeaders() });
+      loadUsers(usersPage); loadStats();
+    } catch (e) { alert('Error deleting user'); }
+  }
+
+  // ── REPORTS ───────────────────────────────────────────────────────────
+  async function loadReports(page = 1) {
+    reportsPage = page;
+    const status = document.getElementById('reportFilter').value;
+    const params = new URLSearchParams({ page, limit: 15, status });
+    document.getElementById('reportsTable').innerHTML = '<div class="loading"><div class="spinner"></div><br/>Loading...</div>';
+
+    try {
+      const res = await fetch(`${API}/api/admin/reports?${params}`, { headers: authHeaders() });
+      const data = await res.json();
+      if (!data.success) return;
+
+      document.getElementById('reportCount').textContent = `(${data.total} total)`;
+      if (data.reports.length === 0) {
+        document.getElementById('reportsTable').innerHTML = '<div class="loading">No reports found ✅</div>';
+        return;
+      }
+
+      const rows = data.reports.map(r => `
+        <tr>
+          <td><strong>${r.reportedUsername || '—'}</strong></td>
+          <td style="color:var(--muted);font-size:13px;">${r.reportedBy?.username || '—'}</td>
+          <td><span class="badge badge-banned">${r.reason}</span></td>
+          <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;">${r.description || '—'}</td>
+          <td><span class="badge badge-${r.status}">${r.status}</span></td>
+          <td style="font-size:12px;color:var(--muted);">${new Date(r.createdAt).toLocaleDateString()}</td>
+          <td>
+            ${r.status === 'pending' ? `
+              <button class="action-btn btn-resolve" onclick="updateReport('${r._id}','reviewed')">Review</button>
+              <button class="action-btn btn-unban" onclick="updateReport('${r._id}','resolved')">Resolve</button>
+            ` : '—'}
+          </td>
+        </tr>
+      `).join('');
+
+      document.getElementById('reportsTable').innerHTML = `
+        <table>
+          <thead><tr><th>Reported User</th><th>Reported By</th><th>Reason</th><th>Description</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+
+      renderPagination('reportsPagination', page, data.pages, loadReports);
+    } catch (e) { document.getElementById('reportsTable').innerHTML = '<div class="loading">Error loading reports</div>'; }
+  }
+
+  async function updateReport(reportId, status) {
+    try {
+      await fetch(`${API}/api/admin/reports/${reportId}`, {
+        method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ status })
+      });
+      loadReports(reportsPage); loadStats();
+    } catch (e) { alert('Error updating report'); }
+  }
+
+  // ── PAGINATION ────────────────────────────────────────────────────────
+  function renderPagination(containerId, current, total, loadFn) {
+    const el = document.getElementById(containerId);
+    if (total <= 1) { el.innerHTML = ''; return; }
+    let html = `<button class="page-btn" onclick="${loadFn.name}(${current-1})" ${current===1?'disabled':''}>← Prev</button>`;
+    for (let i = 1; i <= total; i++) {
+      if (i === 1 || i === total || Math.abs(i - current) <= 1) {
+        html += `<button class="page-btn ${i===current?'active':''}" onclick="${loadFn.name}(${i})">${i}</button>`;
+      } else if (Math.abs(i - current) === 2) html += '<span style="color:var(--muted)">…</span>';
+    }
+    html += `<button class="page-btn" onclick="${loadFn.name}(${current+1})" ${current===total?'disabled':''}>Next →</button>`;
+    el.innerHTML = html;
+  }
+
+  // ── UTILS ─────────────────────────────────────────────────────────────
+  function debounce(fn, delay) {
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
+  }
+
+  // ── LAW ENFORCEMENT ───────────────────────────────────────────────
+  async function loadLE(page = 1) {
+    lePage = page;
+    const status = document.getElementById('leFilter').value;
+    const params = new URLSearchParams({ page, limit: 15, status });
+    document.getElementById('leTable').innerHTML = '<div class="loading"><div class="spinner"></div><br/>Loading...</div>';
+    try {
+      const res = await fetch(`${API}/api/admin/le-requests?${params}`, { headers: authHeaders() });
+      const data = await res.json();
+      if (!data.success) return;
+      document.getElementById('leCount').textContent = `(${data.data.total} total)`;
+      if (!data.data.requests.length) {
+        document.getElementById('leTable').innerHTML = '<div class="loading">No requests found ✅</div>';
+        return;
+      }
+      const statusColors = { received: 'badge-pending', under_review: 'badge-reviewed', approved: 'badge-online', exported: 'badge-online', rejected: 'badge-banned', completed: 'badge-online' };
+      const rows = data.data.requests.map(r => `
+        <tr>
+          <td><strong style="font-family:monospace;font-size:12px;">${r.requestId}</strong></td>
+          <td>${r.agencyName}</td>
+          <td style="font-size:12px;">${r.officerName}</td>
+          <td><span class="badge badge-banned" style="font-size:10px;">${r.legalBasis.replace(/_/g,' ')}</span></td>
+          <td style="font-size:12px;">${r.caseReference}</td>
+          <td><span class="badge ${statusColors[r.status]||'badge-offline'}">${r.status}</span></td>
+          <td style="font-size:12px;color:var(--muted);">${new Date(r.createdAt).toLocaleDateString()}</td>
+          <td>
+            ${r.status !== 'rejected' && r.status !== 'exported' ? `<button class="action-btn btn-resolve" onclick="exportLE('${r._id}')">Export Data</button>` : '—'}
+          </td>
+        </tr>`).join('');
+      document.getElementById('leTable').innerHTML = `
+        <table>
+          <thead><tr><th>Request ID</th><th>Agency</th><th>Officer</th><th>Legal Basis</th><th>Case Ref</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+      renderPagination('lePagination', page, data.data.pages, loadLE);
+    } catch (e) { document.getElementById('leTable').innerHTML = '<div class="loading">Error loading LE requests</div>'; }
+  }
+
+  async function exportLE(requestId) {
+    if (!confirm('⚠️ Export user data for law enforcement? This action is logged.\n\nProceed only with valid legal authorization.')) return;
+    try {
+      const res = await fetch(`${API}/api/admin/le-requests/${requestId}/export`, { method: 'POST', headers: authHeaders() });
+      const data = await res.json();
+      if (data.success) {
+        const blob = new Blob([JSON.stringify(data.data.exportPackage, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `LE_Export_${Date.now()}.json`; a.click();
+        loadLE(lePage);
+        alert('✅ Export complete. File downloaded. Handle with strict confidentiality.');
+      } else {
+        alert('Error: ' + data.message);
+      }
+    } catch (e) { alert('Export failed: ' + e.message); }
+  }
+
+  function openLEModal() {
+    const html = `
+      <div style="position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:2000;" id="leModal">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:500px;max-height:80vh;overflow-y:auto;">
+          <h3 style="margin-bottom:16px;">⚖️ New Law Enforcement Request</h3>
+          <div style="display:grid;gap:12px;">
+            <div class="form-group"><label>Agency Name *</label><input type="text" id="le_agency" class="search-bar" style="width:100%" placeholder="e.g. CBI, Mumbai Police"/></div>
+            <div class="form-group"><label>Officer Name *</label><input type="text" id="le_officer" class="search-bar" style="width:100%" placeholder="Officer full name"/></div>
+            <div class="form-group"><label>Officer Badge/ID</label><input type="text" id="le_badge" class="search-bar" style="width:100%" placeholder="Badge number"/></div>
+            <div class="form-group"><label>Legal Basis *</label>
+              <select id="le_basis" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;outline:none;">
+                <option value="court_order">Court Order</option>
+                <option value="it_act_section_69">IT Act Section 69</option>
+                <option value="crpc_section_91">CrPC Section 91</option>
+                <option value="emergency_disclosure">Emergency Disclosure (Imminent Threat)</option>
+                <option value="mlat">MLAT</option>
+                <option value="national_security">National Security</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Case Reference Number *</label><input type="text" id="le_case" class="search-bar" style="width:100%" placeholder="FIR number / Case number"/></div>
+            <div class="form-group"><label>Target Username</label><input type="text" id="le_target" class="search-bar" style="width:100%" placeholder="Username of target user"/></div>
+            <div class="form-group"><label>Request Type</label>
+              <select id="le_type" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;outline:none;">
+                <option value="full_package">Full Data Package</option>
+                <option value="user_info">User Info Only</option>
+                <option value="session_logs">Session Logs</option>
+                <option value="messages">Flagged Messages</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Description *</label><textarea id="le_desc" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;height:80px;resize:none;" placeholder="Describe the legal basis and what data is needed"></textarea></div>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+            <button class="btn-cancel" onclick="document.getElementById('leModal').remove()">Cancel</button>
+            <button class="btn-confirm" onclick="submitLE()">Submit Request</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+  }
+
+  async function submitLE() {
+    const agencyName = document.getElementById('le_agency').value.trim();
+    const officerName = document.getElementById('le_officer').value.trim();
+    const legalBasis = document.getElementById('le_basis').value;
+    const caseReference = document.getElementById('le_case').value.trim();
+    const description = document.getElementById('le_desc').value.trim();
+    const targetUsername = document.getElementById('le_target').value.trim();
+    const requestType = document.getElementById('le_type').value;
+    const officerBadge = document.getElementById('le_badge').value.trim();
+
+    if (!agencyName || !officerName || !caseReference || !description)
+      return alert('Please fill all required fields');
+
+    try {
+      // Find user ID if username provided
+      let targetUserId = null;
+      if (targetUsername) {
+        const uRes = await fetch(`${API}/api/admin/users?search=${targetUsername}&limit=1`, { headers: authHeaders() });
+        const uData = await uRes.json();
+        if (uData.data?.users?.length) targetUserId = uData.data.users[0]._id;
+      }
+
+      const res = await fetch(`${API}/api/admin/le-requests`, {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ agencyName, officerName, officerBadge, legalBasis, caseReference, description, requestType, targetUserId, agencyCountry: 'IN' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('leModal').remove();
+        loadLE(1);
+        alert('✅ LE Request logged. Request ID: ' + data.data.request.requestId);
+      } else {
+        alert('Error: ' + data.message);
+      }
+    } catch (e) { alert('Error: ' + e.message); }
+  }
+
+  // Close modal on overlay click
+  document.getElementById('banModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+</script>
+</body>
+</html>
