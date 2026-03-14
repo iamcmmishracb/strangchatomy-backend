@@ -1,7 +1,7 @@
 {
   "name": "randomchat-backend",
   "version": "2.0.0",
-  "description": "RandomChat Backend - Legal Compliance Edition",
+  "description": "RandomChat Backend - Legal Compliance Edition | Gap fixes: geoip-lite for country detection",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -19,7 +19,8 @@
     "ws": "^8.17.0",
     "uuid": "^10.0.0",
     "helmet": "^7.1.0",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "geoip-lite": "^1.4.10"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"

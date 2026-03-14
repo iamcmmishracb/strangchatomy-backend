@@ -1,4 +1,23 @@
 require('dotenv').config();
+
+// ── Startup guard: fail fast if critical env vars are missing in production ──
+if (process.env.NODE_ENV === 'production') {
+  const required = ['JWT_SECRET', 'ENCRYPTION_KEY', 'MONGODB_URI', 'APP_SECRET'];
+  const missing  = required.filter(k => !process.env[k]);
+  if (missing.length > 0) {
+    console.error(`❌ FATAL: Missing required env vars in production: ${missing.join(', ')}`);
+    process.exit(1);
+  }
+  if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 32) {
+    console.error('❌ FATAL: JWT_SECRET must be at least 32 characters in production');
+    process.exit(1);
+  }
+  if (process.env.ENCRYPTION_KEY && process.env.ENCRYPTION_KEY.length !== 32) {
+    console.error('❌ FATAL: ENCRYPTION_KEY must be exactly 32 characters');
+    process.exit(1);
+  }
+}
+
 const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
@@ -14,7 +33,7 @@ const app = express();
 const server = http.createServer(app);
 
 // Models - available after mongoose connects
-let Session, User;
+let Session, User, Message;
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -35,6 +54,8 @@ wss.on('connection', (ws, req) => {
   let userId      = null;
   let displayName = null;
   let gender      = null;
+  // Capture IP at connection time for per-session encryption (Gap 1 fix)
+  const clientIp  = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
 
   // First message must carry the JWT token
   ws.once('message', async (raw) => {
@@ -56,7 +77,7 @@ wss.on('connection', (ws, req) => {
         return;
       }
 
-      const decoded = jwt.verify(data.token, process.env.JWT_SECRET || 'your-secret-key');
+      const decoded = jwt.verify(data.token, process.env.JWT_SECRET);
       sessionId   = decoded.sessionId;
       userId      = decoded.userId;
       displayName = decoded.displayName;
@@ -74,7 +95,7 @@ wss.on('connection', (ws, req) => {
 
       ws.send(JSON.stringify({ type: 'authenticated', message: 'Connected successfully' }));
 
-      ws.on('message', (msg) => handleMessage(sessionId, userId, displayName, gender, msg));
+      ws.on('message', (msg) => handleMessage(sessionId, userId, displayName, gender, clientIp, msg));
 
     } catch (err) {
       console.error('❌ WS auth failed:', err.message);
@@ -134,23 +155,24 @@ wss.on('connection', (ws, req) => {
 });
 
 // Message router
-function handleMessage(sessionId, userId, displayName, gender, raw) {
+function handleMessage(sessionId, userId, displayName, gender, clientIp, raw) {
   try {
     const data      = JSON.parse(raw);
     const eventType = data.type;
 
-    if      (eventType === 'find_match')   handleFindMatch(sessionId, userId, displayName, gender);
+    if      (eventType === 'find_match')   handleFindMatch(sessionId, userId, displayName, gender, clientIp);
     else if (eventType === 'send_message') handleSendMessage(sessionId, data);
     else if (eventType === 'cancel_match') handleCancelMatch(sessionId);
     else if (eventType === 'typing')       handleTyping(sessionId, data);
     else if (eventType === 'end_chat')     handleEndChat(sessionId);
+    else if (eventType === 'flag_message') handleFlagMessage(sessionId, userId, data); // Gap 5
   } catch (err) {
     console.error('❌ Message handling error:', err.message);
   }
 }
 
 // find_match
-async function handleFindMatch(sessionId, userId, displayName, gender) {
+async function handleFindMatch(sessionId, userId, displayName, gender, clientIp) {
   console.log(`🔍 Finding match: ${displayName}`);
 
   if (waitingQueue.length > 0) {
@@ -167,17 +189,20 @@ async function handleFindMatch(sessionId, userId, displayName, gender) {
 
     console.log(`✅ MATCH: ${waiting.displayName} ↔️ ${displayName}`);
 
-    // Save match session to MongoDB
+    // Save match session to MongoDB — encrypt both IPs for LE compliance (IT Act Sec. 69)
     if (Session) {
+      const { encrypt } = require('./utils/encryption');
       Session.create({
-        sessionId:     matchId,
-        user1:         waiting.userId || undefined,
-        user2:         userId         || undefined,
-        user1Username: waiting.displayName,
-        user2Username: displayName,
-        status:        'active',
-        isAnonymous:   true,
-        startedAt:     new Date()
+        sessionId:        matchId,
+        user1:            waiting.userId || undefined,
+        user2:            userId         || undefined,
+        user1Username:    waiting.displayName,
+        user2Username:    displayName,
+        user1IpEncrypted: waiting.clientIp ? encrypt(waiting.clientIp) : undefined,
+        user2IpEncrypted: clientIp         ? encrypt(clientIp)         : undefined,
+        status:           'active',
+        isAnonymous:      true,
+        startedAt:        new Date()
       }).catch(e => console.error('Match session save error:', e.message));
     }
 
@@ -214,7 +239,7 @@ async function handleFindMatch(sessionId, userId, displayName, gender) {
     }
 
   } else {
-    waitingQueue.push({ sessionId, userId, displayName, gender, addedAt: new Date() });
+    waitingQueue.push({ sessionId, userId, displayName, gender, clientIp, addedAt: new Date() });
     console.log(`⏳ Queued: ${displayName} (queue size: ${waitingQueue.length})`);
 
     const ws = connectedUsers[sessionId];
@@ -239,6 +264,7 @@ function handleSendMessage(sessionId, data) {
   const receiver   = match.user1.sessionId === sessionId ? match.user2 : match.user1;
   const receiverWs = connectedUsers[receiver.sessionId];
 
+  // Relay to partner immediately (before DB write so UI feels instant)
   if (receiverWs) {
     receiverWs.send(JSON.stringify({
       type:      'new_message',
@@ -249,7 +275,23 @@ function handleSendMessage(sessionId, data) {
     }));
   }
 
-  // Track message count
+  // ── Persist encrypted message (every message, not just flagged ones) ──
+  if (Message) {
+    const { encrypt } = require('./utils/encryption');
+    const sender = match.user1.sessionId === sessionId ? match.user1 : match.user2;
+    const contentEncrypted = encrypt(data.content || '');
+    if (contentEncrypted) {
+      Message.create({
+        sessionId:        ws.matchId,
+        senderId:         sender.userId   || undefined,
+        senderUsername:   sender.displayName,
+        contentEncrypted,
+        type:             data.messageType || 'text',
+      }).catch(e => console.error('❌ Message save error:', e.message));
+    }
+  }
+
+  // Increment counters
   if (Session) {
     Session.findOneAndUpdate({ sessionId: ws.matchId }, { $inc: { messageCount: 1 } }).catch(() => {});
   }
@@ -316,12 +358,60 @@ function handleEndChat(sessionId) {
   }
 }
 
+// flag_message (Gap 5)
+// Marks a specific message as flagged in the database so the admin
+// panel can surface it for review and the TTL won't auto-delete it.
+async function handleFlagMessage(sessionId, userId, data) {
+  try {
+    const { messageId } = data;
+    if (!messageId) { console.warn('⚠️ flag_message: missing messageId'); return; }
+    if (!Message)   { console.warn('⚠️ flag_message: Message model not ready'); return; }
+
+    // Only flag messages that belong to the caller's current match session
+    const ws      = connectedUsers[sessionId];
+    const matchId = ws?.matchId;
+
+    await Message.findOneAndUpdate(
+      { _id: messageId, ...(matchId && { sessionId: matchId }) },
+      {
+        isFlagged:             true,
+        retainedForCompliance: true,
+      }
+    );
+
+    // Also flag the parent session so admin can find it in Reports view
+    if (matchId && Session) {
+      Session.findOneAndUpdate(
+        { sessionId: matchId },
+        { isFlagged: true, flagReason: 'message_flagged_by_user' }
+      ).catch(() => {});
+    }
+
+    console.log(`🚩 Message flagged: ${messageId}  by session: ${sessionId}`);
+  } catch (err) {
+    console.error('❌ flag_message handler error:', err.message);
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // EXPRESS MIDDLEWARE
 // ═══════════════════════════════════════════════════════════════════════════
 
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(cors());
+
+// ── CORS: restrict to known frontend origin in production ──────────────────
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : [];
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!isProduction) return callback(null, true); // dev: allow all
+    if (!origin) return callback(null, false);       // disallow no-origin in prod
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: Origin '${origin}' not allowed`));
+  },
+  credentials: true,
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(morgan('dev'));
 
@@ -375,6 +465,7 @@ mongoose.connect(process.env.MONGODB_URI)
     console.log('✅ MongoDB connected');
     Session = require('./models/Session');
     User    = require('./models/User');
+    Message = require('./models/Message');
     await seedAdmin();
     server.listen(PORT, () => {
       console.log(`🚀 Server running at http://localhost:${PORT}`);

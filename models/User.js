@@ -20,8 +20,20 @@ const userSchema = new mongoose.Schema({
   registrationIpEncrypted: { type: String },        // AES-256 encrypted
   lastLoginIpEncrypted: { type: String },            // AES-256 encrypted
   deviceIds: [{ type: String }],                     // Device fingerprints
+  deviceModel: { type: String, default: '' },        // e.g. "Pixel 7"
+  deviceManufacturer: { type: String, default: '' }, // e.g. "Google"
   registrationCountry: { type: String, default: 'IN' },
   userAgent: { type: String },
+
+  // Location — stored only when the user grants permission (Gap 1 fix)
+  // Raw coordinates are NOT stored; accuracy is kept for quality assessment only.
+  // Purpose: regional abuse pattern detection (DPDP Act 2023, Sec. 4 — purpose limitation).
+  location: {
+    latitude:  { type: Number, default: null },
+    longitude: { type: Number, default: null },
+    accuracy:  { type: Number, default: null }, // metres — precision indicator only
+    capturedAt: { type: Date,  default: null },
+  },
 
   // Status
   isOnline: { type: Boolean, default: false },
@@ -49,6 +61,11 @@ const userSchema = new mongoose.Schema({
     theme: { type: String, default: 'dark' },
     language: { type: String, default: 'en' },
   },
+
+  // Consent record — DPDP Act 2023, Sec. 6 & 9
+  consentGiven:     { type: Boolean, default: false },
+  consentTimestamp: { type: Date },
+  ageConfirmed:     { type: Boolean, default: false },
 
   lastSeen: { type: Date, default: Date.now },
   lastActiveAt: { type: Date, default: Date.now },

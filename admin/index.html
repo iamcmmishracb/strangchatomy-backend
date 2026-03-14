@@ -75,7 +75,8 @@
   .sidebar-logo h2 { font-size: 18px; font-weight: 700; }
   .sidebar-logo h2 span { color: var(--accent); }
   .sidebar-logo p { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
-  .nav { flex: 1; padding: 16px 12px; }
+  .nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+  .nav-section { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; padding: 8px 12px 4px; margin-top: 8px; }
   .nav-item {
     display: flex; align-items: center; gap: 12px;
     padding: 10px 12px; border-radius: 10px; cursor: pointer;
@@ -127,14 +128,19 @@
 
   /* TABLES */
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
-  .card-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
   .card-header h3 { font-size: 16px; font-weight: 600; }
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   .search-bar {
     padding: 8px 14px; background: var(--surface2); border: 1px solid var(--border);
     border-radius: 8px; color: var(--text); font-family: inherit; font-size: 13px;
     outline: none; width: 220px;
   }
   .search-bar:focus { border-color: var(--accent); }
+  .filter-select {
+    padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-family: inherit; font-size: 13px; outline: none;
+  }
   table { width: 100%; border-collapse: collapse; }
   th { padding: 12px 20px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); border-bottom: 1px solid var(--border); }
   td { padding: 14px 20px; font-size: 14px; border-bottom: 1px solid rgba(42,42,58,0.5); }
@@ -146,7 +152,10 @@
   }
   .badge-online { background: rgba(46,213,115,0.15); color: var(--success); }
   .badge-offline { background: rgba(107,107,128,0.15); color: var(--muted); }
+  .badge-active { background: rgba(46,213,115,0.15); color: var(--success); }
+  .badge-ended { background: rgba(107,107,128,0.15); color: var(--muted); }
   .badge-banned { background: rgba(255,71,87,0.15); color: var(--danger); }
+  .badge-flagged { background: rgba(255,165,2,0.15); color: var(--warning); }
   .badge-pending { background: rgba(255,165,2,0.15); color: var(--warning); }
   .badge-resolved { background: rgba(46,213,115,0.15); color: var(--success); }
   .badge-reviewed { background: rgba(108,99,255,0.15); color: var(--accent); }
@@ -159,6 +168,7 @@
   .btn-unban { background: rgba(46,213,115,0.15); color: var(--success); }
   .btn-delete { background: rgba(107,107,128,0.15); color: var(--muted); }
   .btn-resolve { background: rgba(108,99,255,0.15); color: var(--accent); }
+  .btn-warn { background: rgba(255,165,2,0.15); color: var(--warning); }
   .action-btn:hover { opacity: 0.7; }
 
   /* PAGINATION */
@@ -215,6 +225,39 @@
   .mini-stat { background: var(--surface2); border-radius: 12px; padding: 16px; }
   .mini-stat-label { font-size: 12px; color: var(--muted); }
   .mini-stat-val { font-size: 22px; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-top: 4px; }
+
+  /* USER DETAIL MODAL */
+  #userDetailModal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    display: none; align-items: center; justify-content: center; z-index: 2000;
+  }
+  #userDetailModal.open { display: flex; }
+  .user-detail-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 32px; width: 580px; max-height: 85vh;
+    overflow-y: auto; position: relative;
+  }
+  .user-detail-box h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .user-detail-box .sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .detail-item { background: var(--surface2); border-radius: 10px; padding: 12px 14px; }
+  .detail-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .detail-val { font-size: 14px; font-weight: 500; word-break: break-all; }
+  .detail-val.mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .detail-section-title { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 10px; font-weight: 600; }
+  .detail-actions { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+  .close-detail {
+    position: absolute; top: 16px; right: 16px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--muted); font-size: 18px;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; line-height: 1;
+  }
+  .close-detail:hover { color: var(--text); border-color: var(--text); }
+
+  /* TRUNCATE */
+  .truncate { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mono-sm { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -246,19 +289,31 @@
   <div class="sidebar">
     <div class="sidebar-logo">
       <h2>Random<span>Chat</span></h2>
-      <p>// admin panel v1.0</p>
+      <p>// admin panel v2.0</p>
     </div>
     <nav class="nav">
-      <div class="nav-item active" onclick="showPage('dashboard')">
+      <div class="nav-item active" onclick="showPage('dashboard', this)">
         <span class="icon">📊</span> Dashboard
       </div>
-      <div class="nav-item" onclick="showPage('users')">
+      <div class="nav-section">Moderation</div>
+      <div class="nav-item" onclick="showPage('users', this)">
         <span class="icon">👥</span> Users
       </div>
-      <div class="nav-item" onclick="showPage('reports')">
+      <div class="nav-item" onclick="showPage('reports', this)">
         <span class="icon">🚨</span> Reports
       </div>
-      <div class="nav-item" onclick="showPage('le')">
+      <div class="nav-section">Data</div>
+      <div class="nav-item" onclick="showPage('sessions', this)">
+        <span class="icon">💬</span> Sessions
+      </div>
+      <div class="nav-item" onclick="showPage('messages', this)">
+        <span class="icon">✉️</span> Messages
+      </div>
+      <div class="nav-item" onclick="showPage('ipusers', this)">
+        <span class="icon">🌐</span> IP Users
+      </div>
+      <div class="nav-section">Legal</div>
+      <div class="nav-item" onclick="showPage('le', this)">
         <span class="icon">⚖️</span> Law Enforcement
       </div>
     </nav>
@@ -283,7 +338,7 @@
       <div class="stats-grid" id="statsGrid">
         <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value" id="s-total">—</div><div class="stat-sub">anonymous users</div></div>
         <div class="stat-card"><div class="stat-label">Online Now</div><div class="stat-value" id="s-online">—</div><div class="stat-sub">active users</div></div>
-        <div class="stat-card"><div class="stat-label">Total Messages</div><div class="stat-value" id="s-msgs">—</div><div class="stat-sub">all time</div></div>
+        <div class="stat-card"><div class="stat-label">Active Sessions</div><div class="stat-value" id="s-active">—</div><div class="stat-sub">chats in progress</div></div>
         <div class="stat-card"><div class="stat-label">Pending Reports</div><div class="stat-value" id="s-reports">—</div><div class="stat-sub">need review</div></div>
       </div>
       <div class="two-col">
@@ -298,17 +353,38 @@
               <div class="mini-stat-label">Messages Today</div>
               <div class="mini-stat-val" id="s-msgtoday" style="color:var(--accent3)">—</div>
             </div>
-            <div class="mini-stat">
-              <div class="mini-stat-label">Total Chat Sessions</div>
+            <div class="mini-stat" style="margin-bottom:12px;">
+              <div class="mini-stat-label">Total Sessions / Active Now</div>
               <div class="mini-stat-val" id="s-sessions" style="color:var(--accent2)">—</div>
+            </div>
+            <div class="mini-stat" style="margin-bottom:12px;">
+              <div class="mini-stat-label">Real Sessions / Bot Sessions</div>
+              <div class="mini-stat-val" id="s-realbots" style="color:var(--muted)">—</div>
+            </div>
+            <div class="mini-stat" style="margin-bottom:12px;">
+              <div class="mini-stat-label">Total Messages (all sessions)</div>
+              <div class="mini-stat-val" id="s-sessionmsgs" style="color:var(--accent)">—</div>
+            </div>
+            <div class="mini-stat" style="margin-bottom:12px;">
+              <div class="mini-stat-label">Avg Session Duration</div>
+              <div class="mini-stat-val" id="s-avgduration" style="color:var(--accent2)">—</div>
+            </div>
+            <div class="mini-stat" style="margin-bottom:12px;">
+              <div class="mini-stat-label">Total Reports (all time)</div>
+              <div class="mini-stat-val" id="s-totalreports" style="color:var(--danger)">—</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-label">Pending LE Requests</div>
+              <div class="mini-stat-val" id="s-le" style="color:var(--warning)">—</div>
             </div>
           </div>
         </div>
         <div class="card">
           <div class="card-header"><h3>Quick Actions</h3></div>
           <div style="padding:20px;display:flex;flex-direction:column;gap:10px;">
-            <button class="action-btn" style="padding:12px;background:rgba(108,99,255,0.15);color:var(--accent);border-radius:10px;font-size:14px;" onclick="showPage('users')">👥 Manage Users</button>
-            <button class="action-btn" style="padding:12px;background:rgba(255,71,87,0.15);color:var(--danger);border-radius:10px;font-size:14px;" onclick="showPage('reports')">🚨 Review Reports</button>
+            <button class="action-btn" style="padding:12px;background:rgba(108,99,255,0.15);color:var(--accent);border-radius:10px;font-size:14px;" onclick="showPageByName('users')">👥 Manage Users</button>
+            <button class="action-btn" style="padding:12px;background:rgba(255,71,87,0.15);color:var(--danger);border-radius:10px;font-size:14px;" onclick="showPageByName('reports')">🚨 Review Reports</button>
+            <button class="action-btn" style="padding:12px;background:rgba(67,233,123,0.15);color:var(--success);border-radius:10px;font-size:14px;" onclick="showPageByName('sessions')">💬 View Sessions</button>
             <button class="action-btn" style="padding:12px;background:rgba(46,213,115,0.15);color:var(--success);border-radius:10px;font-size:14px;" onclick="loadStats()">🔄 Refresh Stats</button>
           </div>
         </div>
@@ -319,16 +395,20 @@
     <div class="page" id="page-users">
       <div class="page-header">
         <h1>Users</h1>
-        <p>Manage all users</p>
+        <p>Manage all registered users</p>
       </div>
       <div class="card">
         <div class="card-header">
           <h3>All Users <span id="userCount" style="color:var(--muted);font-size:13px;"></span></h3>
-          <div style="display:flex;gap:8px;">
-            <select id="banFilter" onchange="loadUsers(1)" style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none;">
+          <div class="filter-row">
+            <select id="banFilter" onchange="loadUsers(1)" class="filter-select">
               <option value="">All Users</option>
               <option value="false">Active</option>
               <option value="true">Banned</option>
+            </select>
+            <select id="legalHoldFilter" onchange="loadUsers(1)" class="filter-select">
+              <option value="">All</option>
+              <option value="true">Legal Hold Only</option>
             </select>
             <input class="search-bar" id="userSearch" placeholder="Search username or email..." oninput="debounce(loadUsers, 400)(1)"/>
           </div>
@@ -347,15 +427,122 @@
       <div class="card">
         <div class="card-header">
           <h3>Reports <span id="reportCount" style="color:var(--muted);font-size:13px;"></span></h3>
-          <select id="reportFilter" onchange="loadReports(1)" style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none;">
-            <option value="">All</option>
-            <option value="pending">Pending</option>
-            <option value="reviewed">Reviewed</option>
-            <option value="resolved">Resolved</option>
-          </select>
+          <div class="filter-row">
+            <select id="reportFilter" onchange="loadReports(1)" class="filter-select">
+              <option value="">All</option>
+              <option value="pending">Pending</option>
+              <option value="under_review">Under Review</option>
+              <option value="resolved_ban">Resolved: Banned</option>
+              <option value="resolved_warn">Resolved: Warned</option>
+              <option value="resolved_dismissed">Dismissed</option>
+            </select>
+            <input class="search-bar" id="reportSearch" placeholder="Search by reported username..." oninput="debounce(loadReports, 400)(1)" style="width:220px;"/>
+          </div>
         </div>
         <div id="reportsTable"><div class="loading"><div class="spinner"></div><br/>Loading reports...</div></div>
         <div class="pagination" id="reportsPagination"></div>
+      </div>
+    </div>
+
+    <!-- SESSIONS -->
+    <div class="page" id="page-sessions">
+      <div class="page-header">
+        <h1>Sessions</h1>
+        <p>View and manage all chat sessions</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>All Sessions <span id="sessionCount" style="color:var(--muted);font-size:13px;"></span></h3>
+          <div class="filter-row">
+            <select id="sessionStatusFilter" onchange="loadSessions(1)" class="filter-select">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="ended">Ended</option>
+            </select>
+            <select id="sessionFlagFilter" onchange="loadSessions(1)" class="filter-select">
+              <option value="">All Sessions</option>
+              <option value="true">Flagged Only</option>
+            </select>
+            <input class="search-bar" id="sessionSearch" placeholder="Search username or session ID..." oninput="debounce(loadSessions, 400)(1)" style="width:240px;"/>
+          </div>
+        </div>
+        <div id="sessionsTable"><div class="loading"><div class="spinner"></div><br/>Loading sessions...</div></div>
+        <div class="pagination" id="sessionsPagination"></div>
+      </div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="page" id="page-messages">
+      <div class="page-header">
+        <h1>Messages</h1>
+        <p>All chat messages — stored encrypted, decrypted here for review</p>
+      </div>
+      <div class="card" style="margin-bottom:16px;background:rgba(108,99,255,0.05);border-color:rgba(108,99,255,0.3);">
+        <div style="padding:16px 20px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:20px;">🔒</span>
+          <span style="font-size:13px;color:var(--accent);">All messages are stored AES-256 encrypted at rest. Plain text is never written to the database — decryption happens only here for admin review and in law-enforcement exports (IT Act 2000, Sec. 69). Messages auto-delete after ${DATA_RETENTION_DAYS || 90} days unless retained for compliance.</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Stored Messages <span id="messageCount" style="color:var(--muted);font-size:13px;"></span></h3>
+          <div class="filter-row">
+            <select id="messageFlagFilter" onchange="loadMessages(1)" class="filter-select">
+              <option value="">All Messages</option>
+              <option value="true">Flagged Only</option>
+              <option value="false">Not Flagged</option>
+            </select>
+            <input class="search-bar" id="messageSessionFilter" placeholder="Filter by session ID..." oninput="debounce(loadMessages, 400)(1)" style="width:240px;"/>
+          </div>
+        </div>
+        <div id="messagesTable"><div class="loading"><div class="spinner"></div><br/>Loading messages...</div></div>
+        <div class="pagination" id="messagesPagination"></div>
+      </div>
+    </div>
+
+    <!-- IP USERS -->
+    <div class="page" id="page-ipusers">
+      <div class="page-header">
+        <h1>🌐 IP-wise Users</h1>
+        <p>Accounts grouped by registration IP — spot multi-account abuse from the same device/network</p>
+      </div>
+      <div class="card" style="margin-bottom:16px;background:rgba(255,165,2,0.05);border-color:rgba(255,165,2,0.3);">
+        <div style="padding:14px 20px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:18px;">⚠️</span>
+          <span style="font-size:13px;color:var(--warning);">IPs are decrypted only for this view and never logged. Groups with 2+ accounts may indicate ban evasion or multi-accounting.</span>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px;">
+        <div style="padding:14px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <label style="font-size:13px;color:var(--muted);">Show:</label>
+          <select id="ipFilter" onchange="loadIpUsers()" class="filter-select">
+            <option value="all">All IPs</option>
+            <option value="multi" selected>Multiple accounts only</option>
+          </select>
+          <input class="search-bar" id="ipSearch" placeholder="Search IP or username..." oninput="renderIpGroups()" style="width:220px;margin:0;"/>
+          <span id="ipSummary" style="font-size:12px;color:var(--muted);margin-left:auto;"></span>
+        </div>
+      </div>
+      <div id="ipGroupsContainer"><div class="loading"><div class="spinner"></div><br/>Loading...</div></div>
+    </div>
+
+    <!-- SESSION CHAT MODAL -->
+    <div id="chatModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);">
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(680px,95vw);max-height:85vh;background:var(--surface);border:1px solid var(--border);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;">
+        <div style="padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+          <div>
+            <div style="font-weight:700;font-size:15px;">💬 Session Chat</div>
+            <div id="chatModalSessionId" style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:2px;"></div>
+          </div>
+          <button onclick="closeChatModal()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;">×</button>
+        </div>
+        <div id="chatModalBody" style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px;">
+          <div class="loading"><div class="spinner"></div><br/>Loading messages...</div>
+        </div>
+        <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0;">
+          <div id="chatModalMeta" style="font-size:12px;color:var(--muted);flex:1;"></div>
+          <button class="action-btn btn-warn" id="chatModalFlagBtn" style="display:none;"></button>
+        </div>
       </div>
     </div>
 
@@ -365,19 +552,90 @@
         <h1>⚖️ Law Enforcement</h1>
         <p>Manage legal data requests — IT Act 2000, CrPC Section 91, DPDP Act 2023</p>
       </div>
+
+      <!-- Data Inventory — what we hold and can share -->
+      <div class="card" style="margin-bottom:16px;border-color:rgba(108,99,255,0.3);background:rgba(108,99,255,0.04);">
+        <div class="card-header"><h3>🗂 Data We Hold (Available for Legal Disclosure)</h3></div>
+        <div style="padding:16px 20px;">
+          <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">All data below is available via the LE Export button on any LE Request. Every export is logged with timestamp and admin username.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;">
+            <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;">
+              <div style="font-weight:700;font-size:12px;color:var(--accent);margin-bottom:6px;">👤 IDENTITY</div>
+              <div style="font-size:12px;color:var(--text);line-height:1.8;">
+                ✅ Display name (nickname)<br>
+                ✅ Gender<br>
+                ✅ Anonymous session flag<br>
+                ✅ Account creation timestamp<br>
+                ✅ Consent record + timestamp
+              </div>
+            </div>
+            <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;">
+              <div style="font-weight:700;font-size:12px;color:var(--accent);margin-bottom:6px;">📱 DEVICE</div>
+              <div style="font-size:12px;color:var(--text);line-height:1.8;">
+                ✅ Device ID (Android ID / iOS vendor ID)<br>
+                ✅ Device model &amp; manufacturer<br>
+                ✅ User-Agent string<br>
+                ✅ All device IDs ever used
+              </div>
+            </div>
+            <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;">
+              <div style="font-weight:700;font-size:12px;color:var(--accent);margin-bottom:6px;">🌐 NETWORK</div>
+              <div style="font-size:12px;color:var(--text);line-height:1.8;">
+                ✅ Registration IP (AES-256 encrypted, decryptable)<br>
+                ✅ Last login IP (AES-256 encrypted, decryptable)<br>
+                ✅ Registration country<br>
+                ⚠️ ISP: derive from IP via lookup
+              </div>
+            </div>
+            <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;">
+              <div style="font-weight:700;font-size:12px;color:var(--accent);margin-bottom:6px;">📍 LOCATION</div>
+              <div style="font-size:12px;color:var(--text);line-height:1.8;">
+                ✅ GPS latitude &amp; longitude (if granted)<br>
+                ✅ GPS accuracy in metres<br>
+                ✅ Location capture timestamp<br>
+                ⚠️ Not available if user denied permission
+              </div>
+            </div>
+            <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;">
+              <div style="font-weight:700;font-size:12px;color:var(--accent);margin-bottom:6px;">💬 SESSIONS &amp; MESSAGES</div>
+              <div style="font-size:12px;color:var(--text);line-height:1.8;">
+                ✅ All session IDs, start/end times, duration<br>
+                ✅ Partner usernames per session<br>
+                ✅ Message count per session<br>
+                ✅ Encrypted messages (decrypted in export)<br>
+                ✅ Flagged/reported message records
+              </div>
+            </div>
+            <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;">
+              <div style="font-weight:700;font-size:12px;color:var(--accent);margin-bottom:6px;">🚨 MODERATION</div>
+              <div style="font-size:12px;color:var(--text);line-height:1.8;">
+                ✅ All reports filed against user<br>
+                ✅ Reports filed by user<br>
+                ✅ Ban record &amp; reason<br>
+                ✅ Legal hold status &amp; reason
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:14px;padding:10px 14px;background:rgba(255,165,2,0.08);border-radius:8px;border:1px solid rgba(255,165,2,0.3);font-size:12px;color:var(--warning);">
+            ⚠️ Data is retained for 90 days. Messages on flagged/reported sessions are retained indefinitely until legal hold is lifted. All exports are logged and timestamped. Exports are provided in JSON format.
+          </div>
+        </div>
+      </div>
+
       <div class="card" style="margin-bottom:16px;">
         <div class="card-header"><h3>📋 Compliance Summary</h3></div>
         <div style="padding:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
           <div class="mini-stat"><div class="mini-stat-label">Data Retention</div><div class="mini-stat-val" style="color:var(--accent);font-size:16px;">90 Days (IT Act)</div></div>
           <div class="mini-stat"><div class="mini-stat-label">IP Storage</div><div class="mini-stat-val" style="color:var(--accent3);font-size:16px;">AES-256 Encrypted</div></div>
-          <div class="mini-stat"><div class="mini-stat-label">Message Storage</div><div class="mini-stat-val" style="color:var(--accent2);font-size:16px;">Flagged Sessions Only</div></div>
+          <div class="mini-stat"><div class="mini-stat-label">Message Storage</div><div class="mini-stat-val" style="color:var(--accent2);font-size:16px;">All Sessions (90d)</div></div>
         </div>
       </div>
+
       <div class="card">
         <div class="card-header">
           <h3>LE Requests <span id="leCount" style="color:var(--muted);font-size:13px;"></span></h3>
-          <div style="display:flex;gap:8px;">
-            <select id="leFilter" onchange="loadLE(1)" style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none;">
+          <div class="filter-row">
+            <select id="leFilter" onchange="loadLE(1)" class="filter-select">
               <option value="">All</option>
               <option value="received">Received</option>
               <option value="under_review">Under Review</option>
@@ -395,6 +653,89 @@
 
   </div><!-- end content -->
 </div><!-- end app -->
+
+<!-- USER DETAIL MODAL -->
+<div id="userDetailModal">
+  <div class="user-detail-box">
+    <span class="close-detail" onclick="closeUserDetail()">✕</span>
+    <h2 id="ud-username">—</h2>
+    <div class="sub" id="ud-sub">—</div>
+
+    <div class="detail-section-title">👤 Identity</div>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-label">Display Name</div><div class="detail-val" id="ud-displayName">—</div></div>
+      <div class="detail-item"><div class="detail-label">Gender</div><div class="detail-val" id="ud-gender">—</div></div>
+      <div class="detail-item"><div class="detail-label">Role</div><div class="detail-val" id="ud-role">—</div></div>
+      <div class="detail-item"><div class="detail-label">Anonymous</div><div class="detail-val" id="ud-anon">—</div></div>
+    </div>
+
+    <div class="detail-section-title">📊 Activity</div>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-label">Total Chats</div><div class="detail-val mono" id="ud-chats">—</div></div>
+      <div class="detail-item"><div class="detail-label">Total Messages</div><div class="detail-val mono" id="ud-msgs">—</div></div>
+      <div class="detail-item"><div class="detail-label">Last Seen</div><div class="detail-val" id="ud-lastseen">—</div></div>
+      <div class="detail-item"><div class="detail-label">Last Active</div><div class="detail-val" id="ud-lastactive">—</div></div>
+    </div>
+
+    <div class="detail-section-title">📱 Device & Hardware</div>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-label">Device Model</div><div class="detail-val mono" id="ud-devmodel">—</div></div>
+      <div class="detail-item"><div class="detail-label">Manufacturer</div><div class="detail-val mono" id="ud-devmfr">—</div></div>
+      <div class="detail-item"><div class="detail-label">User Agent</div><div class="detail-val mono" id="ud-useragent" style="font-size:10px;word-break:break-all;">—</div></div>
+      <div class="detail-item"><div class="detail-label">Device IDs</div><div class="detail-val mono" id="ud-devices" style="font-size:11px;word-break:break-all;">—</div></div>
+    </div>
+
+    <div class="detail-section-title">📍 Location (GPS — if permission granted)</div>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-label">Latitude</div><div class="detail-val mono" id="ud-lat">—</div></div>
+      <div class="detail-item"><div class="detail-label">Longitude</div><div class="detail-val mono" id="ud-lng">—</div></div>
+      <div class="detail-item"><div class="detail-label">Accuracy (m)</div><div class="detail-val mono" id="ud-accuracy">—</div></div>
+      <div class="detail-item"><div class="detail-label">Location Captured</div><div class="detail-val" id="ud-loccaptured">—</div></div>
+    </div>
+    <div id="ud-mapslink" style="display:none;margin-bottom:8px;">
+      <a id="ud-mapsa" href="#" target="_blank" style="color:var(--accent);font-size:12px;">🗺 View on Google Maps</a>
+    </div>
+
+    <div class="detail-section-title">🌐 Network & Registration</div>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-label">Country (Registration)</div><div class="detail-val" id="ud-country">—</div></div>
+      <div class="detail-item"><div class="detail-label">Joined</div><div class="detail-val" id="ud-created">—</div></div>
+      <div class="detail-item"><div class="detail-label">Expires At</div><div class="detail-val" id="ud-expires">—</div></div>
+      <div class="detail-item"><div class="detail-label">Consent Timestamp</div><div class="detail-val" id="ud-consent">—</div></div>
+    </div>
+
+    <div class="detail-section-title">🔒 IP Addresses (AES-256 Encrypted at Rest)</div>
+    <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+      <div class="detail-label">Registration IP — decrypted for admin view only</div>
+      <div class="detail-val mono" id="ud-regip" style="font-size:12px;margin-top:4px;">—</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+      <div class="detail-label">Last Login IP — decrypted for admin view only</div>
+      <div class="detail-val mono" id="ud-loginip" style="font-size:12px;margin-top:4px;">—</div>
+    </div>
+
+    <div class="detail-section-title">⚠️ Moderation</div>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-label">Banned</div><div class="detail-val" id="ud-banned">—</div></div>
+      <div class="detail-item"><div class="detail-label">Ban Reason</div><div class="detail-val" id="ud-banreason">—</div></div>
+      <div class="detail-item"><div class="detail-label">Reports Made</div><div class="detail-val mono" id="ud-reportcount">—</div></div>
+      <div class="detail-item"><div class="detail-label">Times Reported</div><div class="detail-val mono" id="ud-reportedcount">—</div></div>
+      <div class="detail-item"><div class="detail-label">Legal Hold</div><div class="detail-val" id="ud-legalhold">—</div></div>
+      <div class="detail-item"><div class="detail-label">Verified</div><div class="detail-val" id="ud-verified">—</div></div>
+    </div>
+
+    <div class="detail-section-title">🔗 Quick Actions</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+      <button class="action-btn" style="background:rgba(108,99,255,0.15);color:var(--accent);" id="ud-viewsessions-btn">📋 View Sessions</button>
+      <button class="action-btn" style="background:rgba(108,99,255,0.15);color:var(--accent);" id="ud-viewreports-btn">🚨 View Reports</button>
+      <button class="action-btn" style="background:rgba(108,99,255,0.15);color:var(--accent);" id="ud-viewipgroup-btn">🌐 Same-IP Users</button>
+    </div>
+
+    <div class="detail-actions" id="ud-actions"></div>
+  </div>
+</div>
+
+<!-- BAN MODAL -->
 <div class="modal-overlay" id="banModal">
   <div class="modal">
     <h3>🚫 Ban User</h3>
@@ -410,26 +751,22 @@
 <script>
   const API = '';
   let adminToken = '';
-  let creds = { username: '', password: '' };
   let currentBanUserId = null;
-  let usersPage = 1, reportsPage = 1, lePage = 1;
+  let usersPage = 1, reportsPage = 1, lePage = 1, sessionsPage = 1, messagesPage = 1;
 
   // ── AUTH ──────────────────────────────────────────────────────────────
   async function doLogin() {
     const u = document.getElementById('loginUser').value.trim();
     const p = document.getElementById('loginPass').value.trim();
     if (!u || !p) return;
-
     try {
       const res = await fetch(`${API}/api/admin/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: u, password: p })
       });
       const data = await res.json();
       if (data.success) {
         adminToken = data.data.token;
-        creds = { username: u, password: p };
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('app').style.display = 'flex';
         document.getElementById('adminName').textContent = u;
@@ -448,7 +785,6 @@
 
   function doLogout() {
     adminToken = '';
-    creds = { username: '', password: '' };
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('app').style.display = 'none';
   }
@@ -458,14 +794,26 @@
   }
 
   // ── NAVIGATION ────────────────────────────────────────────────────────
-  function showPage(name) {
+  function showPage(name, el) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('page-' + name).classList.add('active');
-    event.currentTarget.classList.add('active');
+    if (el) el.classList.add('active');
     if (name === 'users') loadUsers(1);
     if (name === 'reports') loadReports(1);
     if (name === 'le') loadLE(1);
+    if (name === 'sessions') loadSessions(1);
+    if (name === 'messages') loadMessages(1);
+    if (name === 'ipusers') loadIpUsers();
+  }
+
+  function showPageByName(name) {
+    const items = document.querySelectorAll('.nav-item');
+    let found = null;
+    items.forEach(item => {
+      if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(`'${name}'`)) found = item;
+    });
+    showPage(name, found);
   }
 
   // ── STATS ─────────────────────────────────────────────────────────────
@@ -474,23 +822,33 @@
       const res = await fetch(`${API}/api/admin/stats`, { headers: authHeaders() });
       const data = await res.json();
       if (!data.success) return;
-      const s = data.stats;
-      document.getElementById('s-total').textContent = s.totalUsers.toLocaleString();
-      document.getElementById('s-online').textContent = s.onlineUsers.toLocaleString();
-      document.getElementById('s-msgs').textContent = s.totalMessages.toLocaleString();
-      document.getElementById('s-reports').textContent = s.pendingReports.toLocaleString();
-      document.getElementById('s-newusers').textContent = s.newUsersToday.toLocaleString();
-      document.getElementById('s-msgtoday').textContent = s.messagesToday.toLocaleString();
-      document.getElementById('s-sessions').textContent = s.totalSessions.toLocaleString();
+      const s = data.data.stats;
+      document.getElementById('s-total').textContent       = s.totalUsers.toLocaleString();
+      document.getElementById('s-online').textContent      = s.onlineUsers.toLocaleString();
+      document.getElementById('s-active').textContent      = s.activeSessions.toLocaleString();
+      document.getElementById('s-reports').textContent     = s.pendingReports.toLocaleString();
+      document.getElementById('s-newusers').textContent    = s.newUsersToday.toLocaleString();
+      document.getElementById('s-msgtoday').textContent    = s.messagesToday.toLocaleString();
+      document.getElementById('s-sessions').textContent    = `${s.totalSessions.toLocaleString()} / ${s.activeSessions.toLocaleString()} active`;
+      document.getElementById('s-totalreports').textContent = s.totalReports?.toLocaleString() ?? '—';
+      document.getElementById('s-le').textContent          = s.pendingLERequests?.toLocaleString() ?? '—';
+      const real = (s.realSessions ?? s.totalSessions).toLocaleString();
+      const bots = (s.botSessions ?? 0).toLocaleString();
+      document.getElementById('s-realbots').textContent    = `${real} real / ${bots} bot`;
+      document.getElementById('s-sessionmsgs').textContent = (s.totalSessionMessages ?? 0).toLocaleString();
+      const dur = s.avgDurationSeconds ?? 0;
+      const durStr = dur >= 60 ? `${Math.floor(dur/60)}m ${dur%60}s` : `${dur}s`;
+      document.getElementById('s-avgduration').textContent = dur > 0 ? durStr : '—';
     } catch (e) { console.error('Stats error', e); }
   }
 
   // ── USERS ─────────────────────────────────────────────────────────────
   async function loadUsers(page = 1) {
     usersPage = page;
-    const search = document.getElementById('userSearch').value;
-    const banned = document.getElementById('banFilter').value;
-    const params = new URLSearchParams({ page, limit: 15, search, banned });
+    const search    = document.getElementById('userSearch').value;
+    const banned    = document.getElementById('banFilter').value;
+    const legalHold = document.getElementById('legalHoldFilter').value;
+    const params = new URLSearchParams({ page, limit: 15, search, banned, legalHold });
     document.getElementById('usersTable').innerHTML = '<div class="loading"><div class="spinner"></div><br/>Loading...</div>';
 
     try {
@@ -498,38 +856,187 @@
       const data = await res.json();
       if (!data.success) return;
 
-      document.getElementById('userCount').textContent = `(${data.total} total)`;
-      if (data.users.length === 0) {
+      document.getElementById('userCount').textContent = `(${data.data.total} total)`;
+      if (data.data.users.length === 0) {
         document.getElementById('usersTable').innerHTML = '<div class="loading">No users found</div>';
         return;
       }
 
-      const rows = data.users.map(u => `
+      window._usersCache = {};
+      data.data.users.forEach(u => window._usersCache[u._id] = u);
+
+      const rows = data.data.users.map(u => {
+        const ua = u.userAgent || '';
+        const browser = ua.includes('Chrome') ? '🌐 Chrome' : ua.includes('Firefox') ? '🦊 Firefox' : ua.includes('Safari') ? '🧭 Safari' : ua ? '🌐 Browser' : '📱 App';
+        const os = ua.includes('Windows') ? 'Windows' : ua.includes('Mac') ? 'Mac' : ua.includes('Android') ? 'Android' : ua.includes('iPhone') ? 'iOS' : '—';
+        const locStr = u.location?.latitude != null ? `📍 ${u.location.latitude.toFixed(2)}, ${u.location.longitude.toFixed(2)}` : '—';
+        const holdBadge = u.legalHold ? '<span class="badge badge-flagged" style="font-size:10px;">🔒 Hold</span>' : '';
+        const reportedBadge = u.reportedCount > 0 ? `<span style="color:var(--danger);font-size:11px;">⚠ ${u.reportedCount} reports</span>` : '';
+        return `
         <tr>
-          <td><strong>${u.username}</strong></td>
-          <td style="color:var(--muted);font-size:13px;">${u.email}</td>
-          <td><span class="badge ${u.isOnline ? 'badge-online' : 'badge-offline'}">${u.isOnline ? '● Online' : 'Offline'}</span></td>
-          <td>${u.isBanned ? '<span class="badge badge-banned">Banned</span>' : '<span class="badge badge-online">Active</span>'}</td>
-          <td style="font-family:'JetBrains Mono',monospace;font-size:12px;">${u.totalChats || 0} chats</td>
-          <td style="font-size:12px;color:var(--muted);">${new Date(u.createdAt).toLocaleDateString()}</td>
           <td>
+            <strong>${u.username}</strong><br/>
+            <span style="color:var(--muted);font-size:11px;">${u.displayName || '—'} · ${u.gender || '—'}</span><br/>
+            <span style="color:var(--muted);font-size:10px;">${u._id}</span>
+          </td>
+          <td style="font-size:12px;">
+            ${u.registrationCountry || '—'}<br/>
+            <span style="color:var(--muted);font-size:11px;">${browser} · ${os}</span><br/>
+            <span style="color:var(--muted);font-size:10px;">${locStr}</span>
+          </td>
+          <td>
+            <span class="badge ${u.isOnline ? 'badge-online' : 'badge-offline'}">${u.isOnline ? '● Online' : 'Offline'}</span><br/>
+            ${holdBadge}
+          </td>
+          <td>${u.isBanned ? '<span class="badge badge-banned">Banned</span>' : '<span class="badge badge-online">Active</span>'}</td>
+          <td style="font-family:'JetBrains Mono',monospace;font-size:12px;">
+            ${u.totalChats || 0} chats<br/>
+            ${u.totalMessages || 0} msgs<br/>
+            ${reportedBadge}
+          </td>
+          <td style="font-size:11px;color:var(--muted);">
+            ${new Date(u.createdAt).toLocaleDateString()}<br/>
+            <span style="font-size:10px;">${u.consentTimestamp ? '✅ Consent' : '—'}</span>
+          </td>
+          <td>
+            <button class="action-btn btn-resolve" onclick="openUserDetail('${u._id}')">View</button>
             ${u.isBanned
               ? `<button class="action-btn btn-unban" onclick="unbanUser('${u._id}')">Unban</button>`
               : `<button class="action-btn btn-ban" onclick="openBanModal('${u._id}')">Ban</button>`}
+            ${u.legalHold
+              ? `<button class="action-btn" style="background:rgba(255,165,2,0.15);color:var(--warning);font-size:11px;" onclick="toggleLegalHold('${u._id}', false)">🔓 Release Hold</button>`
+              : `<button class="action-btn" style="background:rgba(255,165,2,0.15);color:var(--warning);font-size:11px;" onclick="toggleLegalHold('${u._id}', true)">🔒 Legal Hold</button>`}
             <button class="action-btn btn-delete" onclick="deleteUser('${u._id}', '${u.username}')">Delete</button>
           </td>
-        </tr>
-      `).join('');
+        </tr>`;
+      }).join('');
 
       document.getElementById('usersTable').innerHTML = `
         <table>
-          <thead><tr><th>Username</th><th>Email</th><th>Status</th><th>Account</th><th>Activity</th><th>Joined</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Username / ID</th><th>Country · Device · Location</th><th>Status</th><th>Account</th><th>Activity</th><th>Joined</th><th>Actions</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>`;
 
-      renderPagination('usersPagination', page, data.pages, loadUsers);
+      renderPagination('usersPagination', page, data.data.pages, loadUsers);
     } catch (e) { document.getElementById('usersTable').innerHTML = '<div class="loading">Error loading users</div>'; }
   }
+
+  // ── USER DETAIL MODAL ─────────────────────────────────────────────────
+  async function openUserDetail(userId) {
+    const u = window._usersCache?.[userId];
+    if (!u) { alert('User data not found. Please refresh the users list.'); return; }
+
+    document.getElementById('userDetailModal').classList.add('open');
+    document.getElementById('ud-username').textContent = u.username || u.displayName || '—';
+    document.getElementById('ud-sub').textContent = `User ID: ${u._id}`;
+
+    // Identity
+    document.getElementById('ud-displayName').textContent = u.displayName || '—';
+    document.getElementById('ud-gender').textContent = u.gender ? u.gender.charAt(0).toUpperCase() + u.gender.slice(1) : '—';
+    document.getElementById('ud-role').textContent = u.role || 'user';
+    document.getElementById('ud-anon').textContent = u.isAnonymous ? '✅ Yes' : '❌ No';
+
+    // Activity
+    document.getElementById('ud-chats').textContent = u.totalChats || 0;
+    document.getElementById('ud-msgs').textContent = u.totalMessages || 0;
+    document.getElementById('ud-lastseen').textContent = u.lastSeen ? new Date(u.lastSeen).toLocaleString() : '—';
+    document.getElementById('ud-lastactive').textContent = u.lastActiveAt ? new Date(u.lastActiveAt).toLocaleString() : '—';
+
+    // Device & Hardware
+    document.getElementById('ud-devmodel').textContent  = u.deviceModel  || '— (web session)';
+    document.getElementById('ud-devmfr').textContent    = u.deviceManufacturer || '— (web session)';
+    document.getElementById('ud-useragent').textContent = u.userAgent || '—';
+    document.getElementById('ud-devices').textContent   = u.deviceIds?.length ? u.deviceIds.join('\n') : '—';
+
+    // Location
+    const lat = u.location?.latitude;
+    const lng = u.location?.longitude;
+    document.getElementById('ud-lat').textContent         = lat  != null ? lat.toFixed(6)  : '— (not granted)';
+    document.getElementById('ud-lng').textContent         = lng  != null ? lng.toFixed(6)  : '— (not granted)';
+    document.getElementById('ud-accuracy').textContent    = u.location?.accuracy != null ? u.location.accuracy.toFixed(1) + ' m' : '—';
+    document.getElementById('ud-loccaptured').textContent = u.location?.capturedAt ? new Date(u.location.capturedAt).toLocaleString() : '—';
+    const mapsDiv = document.getElementById('ud-mapslink');
+    if (lat != null && lng != null) {
+      document.getElementById('ud-mapsa').href = `https://www.google.com/maps?q=${lat},${lng}`;
+      mapsDiv.style.display = 'block';
+    } else {
+      mapsDiv.style.display = 'none';
+    }
+
+    // Network & Registration
+    document.getElementById('ud-country').textContent = u.registrationCountry || '—';
+    document.getElementById('ud-created').textContent  = u.createdAt ? new Date(u.createdAt).toLocaleString() : '—';
+    document.getElementById('ud-expires').textContent  = u.expiresAt ? new Date(u.expiresAt).toLocaleDateString() : '—';
+    document.getElementById('ud-consent').textContent  = u.consentTimestamp ? new Date(u.consentTimestamp).toLocaleString() : '—';
+
+    // IPs — try to fetch decrypted from /detail endpoint, fall back to showing encrypted
+    document.getElementById('ud-regip').textContent   = '🔄 Decrypting...';
+    document.getElementById('ud-loginip').textContent = '🔄 Decrypting...';
+    fetch(`${API}/api/admin/users/${userId}/detail`, { headers: authHeaders() })
+      .then(r => r.json())
+      .then(d => {
+        const fmt = ip => {
+          if (!ip) return u.registrationIpEncrypted || '—';
+          const loopback = (ip === '::1' || ip === '127.0.0.1');
+          return ip + (loopback ? '  ⚠ localhost (testing — real IP shown on live server)' : '');
+        };
+        if (d.success) {
+          document.getElementById('ud-regip').textContent   = fmt(d.data.user.registrationIp)   || u.registrationIpEncrypted || '—';
+          document.getElementById('ud-loginip').textContent = fmt(d.data.user.lastLoginIp)       || u.lastLoginIpEncrypted    || '—';
+        } else {
+          document.getElementById('ud-regip').textContent   = u.registrationIpEncrypted || '—';
+          document.getElementById('ud-loginip').textContent = u.lastLoginIpEncrypted    || '—';
+        }
+      })
+      .catch(() => {
+        document.getElementById('ud-regip').textContent   = u.registrationIpEncrypted || '—';
+        document.getElementById('ud-loginip').textContent = u.lastLoginIpEncrypted    || '—';
+      });
+
+    // Moderation
+    document.getElementById('ud-banned').innerHTML        = u.isBanned ? '<span class="badge badge-banned">Banned</span>' : '<span class="badge badge-online">Active</span>';
+    document.getElementById('ud-banreason').textContent   = u.banReason   || '—';
+    document.getElementById('ud-reportcount').textContent = u.reportCount || 0;
+    document.getElementById('ud-reportedcount').textContent = u.reportedCount || 0;
+    document.getElementById('ud-legalhold').textContent   = u.legalHold ? '🔒 Yes — ' + (u.legalHoldReason || '') : '—';
+    document.getElementById('ud-verified').textContent    = u.isVerified ? '✅ Yes' : '❌ No';
+
+    // Quick Action buttons
+    document.getElementById('ud-viewsessions-btn').onclick = () => {
+      closeUserDetail();
+      showPageByName('sessions');
+      setTimeout(() => {
+        document.getElementById('sessionSearch').value = u.username || u.displayName || '';
+        loadSessions(1);
+      }, 80);
+    };
+    document.getElementById('ud-viewreports-btn').onclick = () => {
+      closeUserDetail(); showPageByName('reports');
+    };
+    document.getElementById('ud-viewipgroup-btn').onclick = () => {
+      closeUserDetail();
+      showPageByName('ipusers');
+      setTimeout(() => {
+        document.getElementById('ipFilter').value = 'all';
+        document.getElementById('ipSearch').value = u.username || '';
+        renderIpGroups();
+      }, 200);
+    };
+
+    // Actions
+    document.getElementById('ud-actions').innerHTML = `
+      ${u.isBanned
+        ? `<button class="action-btn btn-unban" onclick="closeUserDetail();unbanUser('${u._id}')">✅ Unban User</button>`
+        : `<button class="action-btn btn-ban" onclick="closeUserDetail();openBanModal('${u._id}')">🚫 Ban User</button>`}
+      <button class="action-btn" style="background:rgba(108,99,255,0.15);color:var(--accent);" onclick="closeUserDetail();showPageByName('le')">⚖️ LE Request</button>
+      <button class="action-btn btn-delete" onclick="closeUserDetail();deleteUser('${u._id}','${u.username}')">🗑️ Delete User</button>
+      <button class="action-btn btn-cancel" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border);" onclick="closeUserDetail()">Close</button>
+    `;
+
+  }
+
+    function closeUserDetail() { document.getElementById('userDetailModal').classList.remove('open'); }
+  document.getElementById('userDetailModal').addEventListener('click', function(e) { if (e.target === this) closeUserDetail(); });
 
   function openBanModal(userId) {
     currentBanUserId = userId;
@@ -564,48 +1071,60 @@
     } catch (e) { alert('Error deleting user'); }
   }
 
+  async function toggleLegalHold(userId, enable) {
+    const reason = enable ? (prompt('Legal hold reason (case reference, law, etc.):') || '') : '';
+    if (enable && reason === null) return; // cancelled
+    try {
+      await fetch(`${API}/api/admin/users/${userId}/legal-hold`, {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ hold: enable, reason })
+      });
+      loadUsers(usersPage);
+    } catch (e) { alert('Error updating legal hold'); }
+  }
+
   // ── REPORTS ───────────────────────────────────────────────────────────
   async function loadReports(page = 1) {
     reportsPage = page;
     const status = document.getElementById('reportFilter').value;
-    const params = new URLSearchParams({ page, limit: 15, status });
+    const search = document.getElementById('reportSearch')?.value || '';
+    const params = new URLSearchParams({ page, limit: 15, status, search });
     document.getElementById('reportsTable').innerHTML = '<div class="loading"><div class="spinner"></div><br/>Loading...</div>';
-
     try {
       const res = await fetch(`${API}/api/admin/reports?${params}`, { headers: authHeaders() });
       const data = await res.json();
       if (!data.success) return;
-
-      document.getElementById('reportCount').textContent = `(${data.total} total)`;
-      if (data.reports.length === 0) {
+      document.getElementById('reportCount').textContent = `(${data.data.total} total)`;
+      if (data.data.reports.length === 0) {
         document.getElementById('reportsTable').innerHTML = '<div class="loading">No reports found ✅</div>';
         return;
       }
-
-      const rows = data.reports.map(r => `
-        <tr>
-          <td><strong>${r.reportedUsername || '—'}</strong></td>
-          <td style="color:var(--muted);font-size:13px;">${r.reportedBy?.username || '—'}</td>
-          <td><span class="badge badge-banned">${r.reason}</span></td>
-          <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;">${r.description || '—'}</td>
-          <td><span class="badge badge-${r.status}">${r.status}</span></td>
-          <td style="font-size:12px;color:var(--muted);">${new Date(r.createdAt).toLocaleDateString()}</td>
-          <td>
-            ${r.status === 'pending' ? `
-              <button class="action-btn btn-resolve" onclick="updateReport('${r._id}','reviewed')">Review</button>
-              <button class="action-btn btn-unban" onclick="updateReport('${r._id}','resolved')">Resolve</button>
-            ` : '—'}
-          </td>
-        </tr>
-      `).join('');
-
-      document.getElementById('reportsTable').innerHTML = `
-        <table>
-          <thead><tr><th>Reported User</th><th>Reported By</th><th>Reason</th><th>Description</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>`;
-
-      renderPagination('reportsPagination', page, data.pages, loadReports);
+      const statusColors = { pending:'badge-pending', under_review:'badge-reviewed', resolved_ban:'badge-banned', resolved_warn:'badge-flagged', resolved_dismissed:'badge-offline' };
+      const statusLabels = { pending:'Pending', under_review:'Under Review', resolved_ban:'Banned', resolved_warn:'Warned', resolved_dismissed:'Dismissed' };
+      const rows = data.data.reports.map(r => {
+        const repUsername = r.reportedUser?.username || r.reportedUsername || '—';
+        const repUserId   = r.reportedUser?._id || '';
+        const byName      = r.reportedBy?.username || '—';
+        const sessLink    = r.sessionId ? `<br/><span style="font-size:10px;cursor:pointer;color:var(--accent);" onclick="openChatModal('${r.sessionId}','')">💬 View session</span>` : '';
+        const canAct      = r.status === 'pending' || r.status === 'under_review';
+        const actions     = canAct ? `
+          <button class="action-btn btn-resolve" style="font-size:11px;" onclick="updateReport('${r._id}','under_review')">Review</button>
+          <button class="action-btn btn-ban" style="font-size:11px;" onclick="updateReport('${r._id}','resolved_ban')">Ban User</button>
+          <button class="action-btn btn-warn" style="font-size:11px;" onclick="updateReport('${r._id}','resolved_warn')">Warn</button>
+          <button class="action-btn" style="font-size:11px;background:var(--surface2);" onclick="updateReport('${r._id}','resolved_dismissed')">Dismiss</button>
+        ` : `<span style="color:var(--muted);font-size:12px;">${statusLabels[r.status]||r.status}</span>`;
+        return `<tr>
+          <td><strong>${repUsername}</strong>${repUserId ? `<br/><button class="action-btn" style="font-size:10px;padding:2px 6px;margin-top:2px;" onclick="openUserDetail('${repUserId}')">View Profile</button>` : ''}</td>
+          <td style="color:var(--muted);font-size:13px;">${byName}</td>
+          <td><span class="badge badge-banned" style="font-size:10px;">${(r.reason||'').replace(/_/g,' ')}</span></td>
+          <td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;">${r.description||'—'}${sessLink}</td>
+          <td><span class="badge ${statusColors[r.status]||'badge-offline'}">${statusLabels[r.status]||r.status}</span></td>
+          <td style="font-size:11px;color:var(--muted);">${new Date(r.createdAt).toLocaleDateString()}</td>
+          <td>${actions}</td>
+        </tr>`;
+      }).join('');
+      document.getElementById('reportsTable').innerHTML = `<table><thead><tr><th>Reported User</th><th>Reported By</th><th>Reason</th><th>Description / Session</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;
+      renderPagination('reportsPagination', page, data.data.pages, loadReports);
     } catch (e) { document.getElementById('reportsTable').innerHTML = '<div class="loading">Error loading reports</div>'; }
   }
 
@@ -616,6 +1135,317 @@
       });
       loadReports(reportsPage); loadStats();
     } catch (e) { alert('Error updating report'); }
+  }
+
+  // ── SESSIONS ──────────────────────────────────────────────────────────
+  async function loadSessions(page = 1) {
+    sessionsPage = page;
+    const status = document.getElementById('sessionStatusFilter').value;
+    const flagged = document.getElementById('sessionFlagFilter').value;
+    const search = document.getElementById('sessionSearch').value;
+    const params = new URLSearchParams({ page, limit: 15, status, flagged, search });
+    document.getElementById('sessionsTable').innerHTML = '<div class="loading"><div class="spinner"></div><br/>Loading...</div>';
+
+    try {
+      const res = await fetch(`${API}/api/admin/sessions?${params}`, { headers: authHeaders() });
+      const data = await res.json();
+      if (!data.success) return;
+
+      document.getElementById('sessionCount').textContent = `(${data.data.total} total)`;
+      if (data.data.sessions.length === 0) {
+        document.getElementById('sessionsTable').innerHTML = '<div class="loading">No sessions found</div>';
+        return;
+      }
+
+      const rows = data.data.sessions.map(s => `
+        <tr>
+          <td><span class="mono-sm" style="cursor:pointer;color:var(--accent);text-decoration:underline dotted;" onclick="openChatModal('${s.sessionId}','${(s.user1Username||'?')+' ↔ '+(s.user2Username||'?')}')" title="View full chat">${s.sessionId ? s.sessionId.slice(0, 20) + '...' : '—'}</span></td>
+          <td>
+            <strong>${s.user1Username || '—'}</strong>
+            <span style="color:var(--muted);font-size:12px;"> ↔ </span>
+            <strong>${s.user2Username || '—'}</strong>
+          </td>
+          <td><span class="badge badge-${s.status === 'active' ? 'active' : 'ended'}">${s.status}</span></td>
+          <td>${s.isFlagged ? '<span class="badge badge-flagged">⚠ Flagged</span>' : '—'}</td>
+          <td style="font-family:'JetBrains Mono',monospace;font-size:12px;">${s.messageCount || 0} msgs</td>
+          <td style="font-size:12px;color:var(--muted);">
+            ${s.durationSeconds > 0 ? (s.durationSeconds >= 60 ? Math.floor(s.durationSeconds/60)+'m '+((s.durationSeconds%60)||0)+'s' : s.durationSeconds+'s') : '—'}
+            ${s.isBotSession ? '<br/><span style="color:var(--warning);font-size:10px;">🤖 Bot</span>' : ''}
+          </td>
+          <td style="font-size:12px;color:var(--muted);">${s.startedAt ? new Date(s.startedAt).toLocaleString() : '—'}</td>
+          <td style="font-size:12px;color:var(--muted);">${s.endedAt ? new Date(s.endedAt).toLocaleString() : (s.status === 'active' ? '<span style="color:var(--success)">Ongoing</span>' : '—')}</td>
+          <td>
+            ${s.status === 'active' ? `<button class="action-btn btn-ban" onclick="endSession('${s._id}')">End</button>` : ''}
+            ${!s.isFlagged ? `<button class="action-btn btn-warn" onclick="flagSession('${s._id}', true)">Flag</button>` : `<button class="action-btn btn-unban" onclick="flagSession('${s._id}', false)">Unflag</button>`}
+            <button class="action-btn" style="background:rgba(108,99,255,0.15);color:var(--accent);" onclick="viewSessionMessages('${s.sessionId}')">💬 Msgs</button>
+            <button class="action-btn btn-delete" onclick="deleteSession('${s._id}')">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+
+      document.getElementById('sessionsTable').innerHTML = `
+        <table>
+          <thead><tr><th>Session ID</th><th>Participants</th><th>Status</th><th>Flag</th><th>Messages</th><th>Duration / Type</th><th>Started</th><th>Ended</th><th>Actions</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+
+      renderPagination('sessionsPagination', page, data.data.pages, loadSessions);
+    } catch (e) { document.getElementById('sessionsTable').innerHTML = '<div class="loading">Error loading sessions</div>'; }
+  }
+
+  async function endSession(id) {
+    if (!confirm('Force end this active session?')) return;
+    try {
+      await fetch(`${API}/api/admin/sessions/${id}/end`, { method: 'PATCH', headers: authHeaders() });
+      loadSessions(sessionsPage);
+    } catch (e) { alert('Error ending session'); }
+  }
+
+  async function flagSession(id, flag) {
+    const reason = flag ? (prompt('Reason for flagging this session:') || 'Admin flagged') : '';
+    if (flag && reason === null) return; // cancelled prompt
+    try {
+      await fetch(`${API}/api/admin/sessions/${id}/flag`, {
+        method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ flag, reason })
+      });
+      loadSessions(sessionsPage);
+    } catch (e) { alert('Error updating session flag'); }
+  }
+
+  async function deleteSession(id) {
+    if (!confirm('Permanently delete this session record?')) return;
+    try {
+      await fetch(`${API}/api/admin/sessions/${id}`, { method: 'DELETE', headers: authHeaders() });
+      loadSessions(sessionsPage);
+    } catch (e) { alert('Error deleting session'); }
+  }
+
+  // Jump to Messages page pre-filtered by session ID
+  function viewSessionMessages(sessionId) {
+    openChatModal(sessionId, null);
+  }
+
+  // ── MESSAGES ──────────────────────────────────────────────────────────
+  async function loadMessages(page = 1) {
+    messagesPage = page;
+    const flagged    = document.getElementById('messageFlagFilter').value;
+    const sessionId  = document.getElementById('messageSessionFilter').value;
+    const params = new URLSearchParams({ page, limit: 20, flagged, sessionId });
+    document.getElementById('messagesTable').innerHTML = '<div class="loading"><div class="spinner"></div><br/>Loading...</div>';
+
+    try {
+      const res = await fetch(`${API}/api/admin/messages?${params}`, { headers: authHeaders() });
+      const data = await res.json();
+      if (!data.success) return;
+
+      document.getElementById('messageCount').textContent = `(${data.data.total} total)`;
+      if (data.data.messages.length === 0) {
+        document.getElementById('messagesTable').innerHTML = '<div class="loading">No messages found ✅</div>';
+        return;
+      }
+
+      const rows = data.data.messages.map(m => `
+        <tr>
+          <td><span class="mono-sm">${m.sessionId ? m.sessionId.slice(0, 18) + '...' : '—'}</span></td>
+          <td style="font-size:13px;">${m.senderUsername || '—'}</td>
+          <td style="max-width:280px;font-size:13px;">
+            ${m.isDeleted ? '<em style="color:var(--muted);">[deleted]</em>' : (m.content ? m.content.slice(0, 120) + (m.content.length > 120 ? '…' : '') : '—')}
+          </td>
+          <td><span class="badge badge-${m.type === 'text' ? 'offline' : 'reviewed'}">${m.type || 'text'}</span></td>
+          <td>${m.isFlagged ? '<span class="badge badge-flagged">⚠ Flagged</span>' : (m.retainedForCompliance ? '<span class="badge badge-pending">Retained</span>' : '—')}</td>
+          <td style="font-size:12px;color:var(--muted);">${m.createdAt ? new Date(m.createdAt).toLocaleString() : '—'}</td>
+          <td>
+            ${!m.isFlagged ? `<button class="action-btn btn-warn" onclick="flagMessage('${m._id}', true)">Flag</button>` : `<button class="action-btn btn-unban" onclick="flagMessage('${m._id}', false)">Unflag</button>`}
+            <button class="action-btn btn-delete" onclick="deleteMessage('${m._id}')">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+
+      document.getElementById('messagesTable').innerHTML = `
+        <table>
+          <thead><tr><th>Session ID</th><th>Sender</th><th>Content</th><th>Type</th><th>Status</th><th>Sent At ↓ newest</th><th>Actions</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+
+      renderPagination('messagesPagination', page, data.data.pages, loadMessages);
+    } catch (e) { document.getElementById('messagesTable').innerHTML = '<div class="loading">Error loading messages</div>'; }
+  }
+
+  async function flagMessage(id, flag) {
+    try {
+      await fetch(`${API}/api/admin/messages/${id}/flag`, {
+        method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ flag })
+      });
+      loadMessages(messagesPage);
+    } catch (e) { alert('Error flagging message'); }
+  }
+
+  async function deleteMessage(id) {
+    if (!confirm('Permanently delete this message record?')) return;
+    try {
+      await fetch(`${API}/api/admin/messages/${id}`, { method: 'DELETE', headers: authHeaders() });
+      loadMessages(messagesPage);
+    } catch (e) { alert('Error deleting message'); }
+  }
+
+  // ── SESSION CHAT MODAL ────────────────────────────────────────────────
+  let _chatModalSessionId = null;
+
+  async function openChatModal(sessionId, participants) {
+    _chatModalSessionId = sessionId;
+    document.getElementById('chatModal').style.display = 'block';
+    document.getElementById('chatModalSessionId').textContent = sessionId;
+    document.getElementById('chatModalMeta').textContent = participants ? `👥 ${participants}` : '';
+    document.getElementById('chatModalFlagBtn').style.display = 'none';
+    document.getElementById('chatModalBody').innerHTML =
+      '<div class="loading"><div class="spinner"></div><br/>Loading messages...</div>';
+
+    try {
+      const res  = await fetch(`${API}/api/admin/sessions/${encodeURIComponent(sessionId)}/messages`, { headers: authHeaders() });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+
+      const msgs = data.data.messages;
+      if (msgs.length === 0) {
+        document.getElementById('chatModalBody').innerHTML =
+          '<div style="text-align:center;color:var(--muted);padding:40px;">No messages stored for this session</div>';
+        return;
+      }
+
+      // Determine the two participants for bubble alignment
+      const senders = [...new Set(msgs.map(m => m.senderUsername || m.senderId))];
+      const side1   = senders[0];
+
+      const html = msgs.map(m => {
+        const sender  = m.senderUsername || m.senderId || '?';
+        const isRight = sender === side1;
+        const flag    = m.isFlagged ? ' <span style="color:var(--warning);font-size:10px;">⚠ flagged</span>' : '';
+        const del     = m.isDeleted ? ' <span style="color:var(--muted);font-size:10px;">[deleted]</span>' : '';
+        const time    = m.createdAt ? new Date(m.createdAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+        const content = m.isDeleted ? '<em style="color:var(--muted);">[deleted]</em>' :
+                        (m.content || '<em style="color:var(--muted);">[no content]</em>');
+        return `
+          <div style="display:flex;flex-direction:column;align-items:${isRight ? 'flex-end' : 'flex-start'};">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">${sender}${flag}${del}</div>
+            <div style="max-width:75%;padding:10px 14px;border-radius:${isRight ? '16px 4px 16px 16px' : '4px 16px 16px 16px'};
+                        background:${isRight ? 'var(--accent)' : 'var(--surface2)'};
+                        color:${isRight ? '#fff' : 'var(--text)'};font-size:14px;word-break:break-word;">
+              ${content}
+            </div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px;">${time}</div>
+          </div>`;
+      }).join('');
+
+      document.getElementById('chatModalBody').innerHTML = html;
+      document.getElementById('chatModalMeta').textContent =
+        `${msgs.length} messages · ${senders.join(' ↔ ')}`;
+      // scroll to bottom
+      const body = document.getElementById('chatModalBody');
+      body.scrollTop = body.scrollHeight;
+    } catch (e) {
+      document.getElementById('chatModalBody').innerHTML =
+        `<div style="color:var(--danger);padding:20px;">Error loading messages: ${e.message}</div>`;
+    }
+  }
+
+  function closeChatModal() {
+    document.getElementById('chatModal').style.display = 'none';
+    _chatModalSessionId = null;
+  }
+  // Close on backdrop click
+  document.getElementById('chatModal').addEventListener('click', function(e) {
+    if (e.target === this) closeChatModal();
+  });
+
+  // ── IP USERS ──────────────────────────────────────────────────────────
+  let _ipGroups = [];
+
+  async function loadIpUsers() {
+    document.getElementById('ipGroupsContainer').innerHTML =
+      '<div class="loading"><div class="spinner"></div><br/>Loading...</div>';
+    try {
+      const res  = await fetch(`${API}/api/admin/users/by-ip`, { headers: authHeaders() });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      _ipGroups = data.data.groups;
+      document.getElementById('ipSummary').textContent =
+        `${data.data.totalIps} unique IPs · ${data.data.totalUsers} users`;
+      renderIpGroups();
+    } catch (e) {
+      document.getElementById('ipGroupsContainer').innerHTML =
+        `<div class="loading">Error: ${e.message}</div>`;
+    }
+  }
+
+  function renderIpGroups() {
+    const filterMulti = document.getElementById('ipFilter').value === 'multi';
+    const search      = (document.getElementById('ipSearch').value || '').toLowerCase();
+
+    let groups = _ipGroups;
+    if (filterMulti) groups = groups.filter(g => g.count > 1);
+    if (search) groups = groups.filter(g =>
+      g.ip.includes(search) ||
+      g.accounts.some(u => (u.displayName || '').toLowerCase().includes(search) ||
+                            (u.username   || '').toLowerCase().includes(search))
+    );
+
+    if (groups.length === 0) {
+      document.getElementById('ipGroupsContainer').innerHTML =
+        '<div class="loading">No groups match your filter ✅</div>';
+      return;
+    }
+
+    const html = groups.map(g => {
+      const multiWarning = g.count > 1
+        ? `<span style="background:rgba(255,77,77,0.15);color:var(--danger);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;">⚠ ${g.count} accounts</span>`
+        : `<span style="background:rgba(67,233,123,0.1);color:var(--success);padding:2px 8px;border-radius:20px;font-size:11px;">1 account</span>`;
+
+      const rows = g.accounts.map(u => `
+        <tr>
+          <td style="font-size:13px;font-weight:600;">${u.displayName || '—'}</td>
+          <td style="font-size:12px;color:var(--muted);">${u.username || '—'}</td>
+          <td><span class="badge badge-${u.gender === 'male' ? 'active' : u.gender === 'female' ? 'flagged' : 'offline'}">${u.gender || '—'}</span></td>
+          <td>${u.isBanned ? '<span class="badge badge-flagged">Banned</span>' : '<span class="badge badge-active">Active</span>'}</td>
+          <td style="font-size:12px;">${u.totalChats || 0} chats</td>
+          <td style="font-size:12px;color:${u.reportedCount > 0 ? 'var(--danger)' : 'var(--muted)'};">${u.reportedCount || 0} reports</td>
+          <td style="font-size:11px;color:var(--muted);">${u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}</td>
+          <td>
+            <button class="action-btn" style="font-size:11px;padding:4px 8px;" onclick="viewUserDetail('${u._id}')">View</button>
+            ${!u.isBanned ? `<button class="action-btn btn-ban" style="font-size:11px;padding:4px 8px;" onclick="banUserFromIp('${u._id}')">Ban</button>` : ''}
+          </td>
+        </tr>`).join('');
+
+      return `
+        <div class="card" style="margin-bottom:14px;">
+          <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;">${g.ip}</span>
+            ${multiWarning}
+            ${g.count > 1 ? '<span style="font-size:11px;color:var(--danger);">Possible ban evasion / multi-account</span>' : ''}
+          </div>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead><tr>
+                <th>Display Name</th><th>Username</th><th>Gender</th>
+                <th>Status</th><th>Chats</th><th>Reports</th><th>Joined</th><th>Actions</th>
+              </tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('ipGroupsContainer').innerHTML = html;
+  }
+
+  async function banUserFromIp(userId) {
+    const reason = prompt('Ban reason:');
+    if (!reason) return;
+    try {
+      await fetch(`${API}/api/admin/users/${userId}/ban`, {
+        method: 'POST', headers: authHeaders(), body: JSON.stringify({ reason })
+      });
+      loadIpUsers();
+    } catch (e) { alert('Error banning user'); }
   }
 
   // ── PAGINATION ────────────────────────────────────────────────────────
@@ -704,7 +1534,7 @@
             <div class="form-group"><label>Officer Name *</label><input type="text" id="le_officer" class="search-bar" style="width:100%" placeholder="Officer full name"/></div>
             <div class="form-group"><label>Officer Badge/ID</label><input type="text" id="le_badge" class="search-bar" style="width:100%" placeholder="Badge number"/></div>
             <div class="form-group"><label>Legal Basis *</label>
-              <select id="le_basis" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;outline:none;">
+              <select id="le_basis" class="filter-select" style="width:100%;">
                 <option value="court_order">Court Order</option>
                 <option value="it_act_section_69">IT Act Section 69</option>
                 <option value="crpc_section_91">CrPC Section 91</option>
@@ -717,7 +1547,7 @@
             <div class="form-group"><label>Case Reference Number *</label><input type="text" id="le_case" class="search-bar" style="width:100%" placeholder="FIR number / Case number"/></div>
             <div class="form-group"><label>Target Username</label><input type="text" id="le_target" class="search-bar" style="width:100%" placeholder="Username of target user"/></div>
             <div class="form-group"><label>Request Type</label>
-              <select id="le_type" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;outline:none;">
+              <select id="le_type" class="filter-select" style="width:100%;">
                 <option value="full_package">Full Data Package</option>
                 <option value="user_info">User Info Only</option>
                 <option value="session_logs">Session Logs</option>
@@ -749,14 +1579,12 @@
       return alert('Please fill all required fields');
 
     try {
-      // Find user ID if username provided
       let targetUserId = null;
       if (targetUsername) {
         const uRes = await fetch(`${API}/api/admin/users?search=${targetUsername}&limit=1`, { headers: authHeaders() });
         const uData = await uRes.json();
         if (uData.data?.users?.length) targetUserId = uData.data.users[0]._id;
       }
-
       const res = await fetch(`${API}/api/admin/le-requests`, {
         method: 'POST', headers: authHeaders(),
         body: JSON.stringify({ agencyName, officerName, officerBadge, legalBasis, caseReference, description, requestType, targetUserId, agencyCountry: 'IN' })
@@ -772,7 +1600,7 @@
     } catch (e) { alert('Error: ' + e.message); }
   }
 
-  // Close modal on overlay click
+  // Close modals on overlay click
   document.getElementById('banModal').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
   });

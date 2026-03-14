@@ -18,6 +18,8 @@ const sessionSchema = new mongoose.Schema({
   status: { type: String, enum: ['active', 'ended'], default: 'active' },
   endReason: { type: String, enum: ['user_left', 'user1_left', 'user2_left', 'disconnected', 'reported', 'admin_ended'], default: 'disconnected' },
   messageCount: { type: Number, default: 0 },
+  durationSeconds: { type: Number, default: 0 }, // Gap 2: wall-clock seconds from match → disconnect
+  isBotSession: { type: Boolean, default: false }, // Gap 3: true = matched a demo bot, no real partner
   isFlagged: { type: Boolean, default: false },   // If reported → retain messages
   flagReason: { type: String, default: '' },
 
@@ -31,7 +33,6 @@ const sessionSchema = new mongoose.Schema({
   expiresAt: {
     type: Date,
     default: () => new Date(Date.now() + RETENTION_DAYS * 24 * 60 * 60 * 1000),
-    index: true
   },
 
   // ═══════════════════════════════════════════════════════════════════
@@ -42,20 +43,13 @@ const sessionSchema = new mongoose.Schema({
   displayName: { type: String },
   gender: { type: String, enum: ['male', 'female', 'other'] },
   
-  // Device information
-  deviceInfo: {
-    model: String,
-    manufacturer: String
-  },
+  // Device info intentionally omitted from Session — stored on User only.
+  // Per DPDP Act 2023 data minimisation: storing device model on every session
+  // record has no additional compliance or safety value beyond the User record.
   
-  // Location data
-  location: {
-    latitude: Number,
-    longitude: Number,
-    accuracy: Number,
-    timestamp: Date
-  },
-  
+  // Location data intentionally removed — not required for core service
+  // (data minimisation, DPDP Act 2023). Re-add only with encryption + purpose documentation.
+
   isAnonymous: { type: Boolean, default: false }
 });
 
@@ -65,5 +59,6 @@ sessionSchema.index({ startedAt: -1 });
 sessionSchema.index({ isFlagged: 1 });
 sessionSchema.index({ deviceId: 1 });
 sessionSchema.index({ status: 1 });
+sessionSchema.index({ isBotSession: 1 }); // Gap 3: admin can filter real vs bot sessions
 
 module.exports = mongoose.model('Session', sessionSchema);
